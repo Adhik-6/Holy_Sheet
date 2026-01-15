@@ -36,6 +36,12 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   ],
 });
 ```
+3. Version your service worker cache to deal with updates properly.
+4. Modify the `history` in `/chat/page.tsx` to send only the summary instead of the whole data set.
+5. Add some other packages necessary for data analysis in pyodide loading phase.
+6. Add a loader for page reloads.
+7. Check if the functions are only imported from barrel files (`index.ts`). Add barrel files if needed.
+8. Fine tune the LLM to give only the python code. It must not give answer for anything other than the data analysis field.
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.
@@ -230,84 +236,47 @@ I am building **ExcelGPT**, an AI Data Analyst Chatbot using **Next.js 14 (App R
 
 The Frontend UI is 60% complete with a "Cyberpunk/Neon" aesthetic.- **InputArea:** Auto-expanding text area with a "Staged File" preview (supports CSV/XLSX).- **ChatArea:** Displays an animated "ExcelGPT" glowing title when empty.- **ChatMessage:** Renders Markdown text OR specific UI Widgets based on the JSON response.- **Widgets:** I have `DataChart` (Recharts with neon palette), `DataTable` (Sticky headers, glowing borders), and `KPIGrid`.**The Data Structure (Important):**
 
-The frontend expects the AI to return a JSON object matching this `AIResponse` type:```typescript
-
+The frontend expects the AI to return a JSON object matching this `AIResponse` type:
+```typescript
 // types.ts
-
 export type ChartPayload = {
-
   config: {
-
     type: 'bar' | 'line' | 'pie';
-
     title: string;
-
     xAxisKey: string;
-
     series: { dataKey: string; label: string; color?: string }[];
-
   };
-
   data: any[];
-
 };
-
-
 
 export type TableData = {
-
   headers: string[];
-
   rows: string[][];
-
 };
-
-
 
 export type KPI = {
-
   label: string;
-
   value: string;
-
   trend?: string;
-
   status?: 'positive' | 'negative' | 'neutral';
-
 };
 
-
-
 export type AIResponse = 
-
   | { type: 'markdown'; summary: string }
-
   | { type: 'chart'; summary: string; data: ChartPayload }
-
   | { type: 'table'; summary: string; data: TableData }
-
   | { type: 'kpi'; summary: string; data: KPI[] };
 
-
-
 export interface Message {
-
   id: string;
-
   role: 'user' | 'assistant';
-
   content: string | AIResponse;
-
   timestamp: string;
-
   attachment?: { name: string; size: number; type: string };
-
 }
-
 ```
 
 My Goal:
-
 Now I need to implement logic for AI layer. We're gonna be implementing RAG 2.0. The 2 types of AIs we're gonna use are LLM & SLM (for simple & offline queries). So frontend has a option that let's user to decide between which model to use as per their convinent. So The AI layer must be independent (changing the model (LLM/SLM) should not cause errors to the frontend).  I guess we'll most likely be using APIs to call the LLMs, so if the user opted for online model, we'll call the API, if user opts for SLM, we'll make sure the model is loaded in the frontend (user's browser) and install it (if not downloaded) then query it. Since its a offline feature, we'll keep this AI layer in the frontend. The LLM API call will be directly thrown to the LLM itself, it first reaches our servers (backend) then actual LLM API.
 
 The frontend gives us the file (let's prototype only using xlsx for now). We definetely can't upload the entire excel sheet to the LLM/SLM (sounds very ineffecient) so we'll just upload the column names and a few rows for example. The problem is deciding on the structure of the response from the AI for different requriements (data visualization, only summary, excel table output, kpis). 
@@ -317,3 +286,37 @@ How will we implement RAG 2.0 (Agentic RAG) here? I've previously told that the 
 Also previously i've been told we will ask the LLM to give us a python script and run the given scripts via pyodide in the browser itself. The python is good at handling tasks related to data stuff.
 
 We'll first start by discussing the approaches we're gonna take, don't jump into coding right off the bat.
+
+## To get Pyodide offline later
+1. The solution is self hosting it. Unless you're using PWA.
+2. Download the pyodide once:
+```bash
+mkdir public/pyodide
+cd public/pyodide
+
+curl -LO https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js
+curl -LO https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.asm.wasm
+curl -LO https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide_py.tar
+curl -LO https://cdn.jsdelivr.net/pyodide/v0.25.0/full/repodata.json
+```
+3. The `public/pyodide` folder should now have all the necessary files.
+4. In `.env.local`, set:
+```
+NEXT_PUBLIC_PYODIDE_INDEX=local
+```
+5. In `next.config.ts`, modify the webpack config if needed.
+```ts
+import type { NextConfig } from "next";
+const nextConfig: NextConfig = {
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false, // Pyodide uses a virtual file system, not Node's fs
+    };
+    return config;
+  },
+};
+export default nextConfig;
+```
+
+## last

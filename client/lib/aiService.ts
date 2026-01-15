@@ -1,96 +1,72 @@
 // lib/aiService.ts
 import axios from 'axios';
-import { loadPyodide } from "pyodide"; // <--- Import directly
-import { Message, AIResponse } from '@/app/chat/types'; // Adjust path if needed
+import { AIResponse } from '@/app/chat/types'; // Adjust path if needed
+import { AgentRequest } from '@/types/global';
 
 // --- 1. PYODIDE SINGLETON ---
 // We only want to load the Python engine once.
 let pyodideInstance: any = null;
 
-async function getPyodide() {
+const PYODIDE_INDEX =
+  process.env.NEXT_PUBLIC_PYODIDE_SOURCE === "local"
+    ? "/pyodide/"
+    : "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/";
+
+const PYODIDE_URL = `${PYODIDE_INDEX}pyodide.js`;
+
+export async function getPyodide() {
   if (pyodideInstance) return pyodideInstance;
 
   console.log("Initializing Pyodide...");
 
-  // Initialize Pyodide
-  // indexURL is required so it knows where to fetch the WASM and standard lib
-  pyodideInstance = await loadPyodide({
-    indexURL: "/pyodide/"
+  // 1. Load pyodide.js (once)
+  if (!(window as any).loadPyodide) {
+    const script = document.createElement("script");
+    script.src = PYODIDE_URL;
+    script.async = true;
+    document.body.appendChild(script);
+    await new Promise((resolve) => (script.onload = resolve));
+  }
+
+  // 2. Initialize runtime
+  // @ts-ignore
+  pyodideInstance = await window.loadPyodide({
+    indexURL: PYODIDE_INDEX,
   });
-  
-  // Pre-load essential Data Science packages
+
+  // 3. Load required packages (CDN now, local later)
   console.log("Loading Pandas...");
   await pyodideInstance.loadPackage(["pandas", "micropip"]);
+
+  // 3. Manually Install OpenPyXL from local wheels
+  // We use micropip to install the specific .whl files we just downloaded
+  const micropip = pyodideInstance.pyimport("micropip");
   
-  // Setup environment: Import pandas globally
+  console.log("Installing OpenPyXL locally...");
+  await micropip.install([
+    "/pyodide/et_xmlfile-1.1.0-py3-none-any.whl", 
+    "/pyodide/openpyxl-3.1.2-py2.py3-none-any.whl"
+  ]);
+  
+  // 4. Setup Python Environment
   await pyodideInstance.runPythonAsync(`
     import pandas as pd
     import json
-    import io
   `);
-  
+
   console.log("Pyodide Ready.");
   return pyodideInstance;
 }
 
-// --- 2. SYSTEM PROMPTS ---
-const SYSTEM_PROMPT = `
-You are a Python Data Analyst.
-Your goal is to answer the user's question by writing a VALID PYTHON SCRIPT.
-
-RULES:
-1. You have a pandas DataFrame named 'df' ALREADY LOADED. Do not load it yourself.
-2. You MUST use 'df' to calculate the answer.
-3. The LAST line of your script must print a JSON object.
-4. Do NOT wrap code in markdown blocks (like \`\`\`python). Just raw code.
-5. If the user asks for a chart, return the 'chart' JSON type.
-6. If the user asks for a table, return the 'table' JSON type.
-
-EXPECTED JSON OUTPUT STRUCTURE (TypeScript Interface):
-
-type ChartPayload = {
-  config: {
-    type: 'bar' | 'line' | 'pie';
-    title: string;
-    xAxisKey: string;
-    series: { dataKey: string; label: string; color?: string }[];
-  };
-  data: any[]; // The array of objects for the chart
+const indentCode = (code: string, indentLevel: number = 4): string => {
+  const indent = ' '.repeat(indentLevel);
+  return code
+    .split('\n')
+    .map(line => indent + line)
+    .join('\n');
 };
 
-type Output = 
-  | { type: 'markdown'; summary: string }
-  | { type: 'chart'; summary: string; data: ChartPayload }
-  | { type: 'table'; summary: string; data: { headers: string[]; rows: any[][] } }
-  | { type: 'kpi'; summary: string; data: { label: string; value: string; status?: 'positive'|'negative' }[] };
-
-EXAMPLE PYTHON SCRIPT:
-# Calculate revenue by month
-monthly = df.groupby('Month')['Revenue'].sum().reset_index()
-print(json.dumps({
-  "type": "chart",
-  "summary": "Revenue peaked in December.",
-  "data": {
-    "config": { "type": "bar", "title": "Revenue", "xAxisKey": "Month", "series": [{"dataKey": "Revenue", "label": "Rev"}] },
-    "data": monthly.to_dict(orient='records')
-  }
-}))
-`;
-
 // --- 3. THE SERVICE ---
-
-interface AgentRequest {
-  userMessage: string;
-  fileContext: string;     // The schema string
-  history: Message[];
-  
-  // File handling for Pyodide
-  fileData?: ArrayBuffer;  // Actual file bytes (only needed on new upload)
-  fileName?: string;       // Needed if fileData is present
-  
-  useLocalModel?: boolean;
-}
-
 export async function processAgentRequest(params: AgentRequest): Promise<AIResponse> {
   const { userMessage, fileContext, history, fileData, fileName } = params;
   
@@ -113,15 +89,13 @@ export async function processAgentRequest(params: AgentRequest): Promise<AIRespo
   // Step B: Construct Prompt for the LLM
   // We combine the System Prompt + File Schema + Conversation History
   const fullPrompt = `
-  ${SYSTEM_PROMPT}
+DATA SCHEMA:
+${fileContext}
 
-  DATA SCHEMA:
-  ${fileContext}
+USER REQUEST: "${userMessage}"
 
-  USER REQUEST: "${userMessage}"
-  
-  Write the Python script now.
-  `;
+Write the Python script now.
+`;
 
   // Step C: The Agent Loop (Generate Code -> Execute -> Retry)
   let attempts = 0;
@@ -131,8 +105,7 @@ export async function processAgentRequest(params: AgentRequest): Promise<AIRespo
 
   while (attempts <= maxRetries) {
     try {
-      attempts++;
-      console.log(`Attempt ${attempts}: Generating Python code...`);
+      console.log(`Attempt ${++attempts}: Generating Python code...`);
       
       // 1. Get Code from AI
       const pythonCode = await callLLM(currentPrompt, params.useLocalModel);
@@ -141,25 +114,34 @@ export async function processAgentRequest(params: AgentRequest): Promise<AIRespo
       const cleanCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
       console.log("Executing Code:", cleanCode);
 
+      const indentedUserCode = indentCode(cleanCode, 4);
+      const finalScript = `
+import sys
+import json
+from io import StringIO
+
+# Capture Standard Output
+_old_stdout = sys.stdout
+sys.stdout = _captured = StringIO()
+
+try:
+${indentedUserCode}
+except Exception as e:
+    # Restore stdout before raising so we can see the error
+    sys.stdout = _old_stdout
+    raise e
+finally:
+    # Always restore stdout
+    sys.stdout = _old_stdout
+`;
+
       // 3. Execute in Pyodide
       // We capture stdout to get the JSON result
       pyodide.setStdout({ batched: (str: string) => { /* ignore intermediate prints */ } });
       
       // Run the code and capture the result of the LAST expression or print statement
       // We wrap it to ensure we capture the specific JSON print
-      await pyodide.runPythonAsync(`
-        import sys
-        from io import StringIO
-        _old_stdout = sys.stdout
-        sys.stdout = _captured = StringIO()
-        
-        try:
-          ${cleanCode}
-        except Exception as e:
-          raise e
-        finally:
-          sys.stdout = _old_stdout
-      `);
+      await pyodide.runPythonAsync(finalScript);
       
       const rawOutput = pyodide.runPython("_captured.getvalue()");
       console.log("Pyodide Output:", rawOutput);

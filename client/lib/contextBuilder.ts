@@ -1,13 +1,6 @@
 // src/utils/contextBuilder.ts
 import * as XLSX from 'xlsx';
-
-export interface FileContext {
-  fileName: string;
-  sheetNames: string[];
-  columns: string[];
-  sampleData: any[]; // First 3 rows
-  rowCount: number;
-}
+import { FileContext } from '@/types/global';
 
 /**
  * Reads an Excel/CSV file and returns a lightweight schema summary

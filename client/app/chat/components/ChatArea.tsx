@@ -23,7 +23,7 @@ export const ChatArea = ({ scrollRef, messages, isTyping }: ChatAreaProps) => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center h-full p-6 relative overflow-hidden pb-30">
                 {/* Background Ambient Blobs */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
                 
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -57,7 +57,7 @@ export const ChatArea = ({ scrollRef, messages, isTyping }: ChatAreaProps) => {
                         className="
                             text-5xl md:text-6xl font-black tracking-tighter mb-6 text-center 
                             text-transparent bg-clip-text 
-                            bg-gradient-to-r from-primary via-accent to-primary
+                            bg-linear-to-r from-primary via-accent to-primary
                             drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]
                         "
                         // 3. Make background larger than text so it can move
@@ -119,7 +119,7 @@ export const ChatArea = ({ scrollRef, messages, isTyping }: ChatAreaProps) => {
                     </AvatarFallback>
                 </Avatar>
                 
-                <Card className="bg-muted/40 p-4 border-border flex gap-1 items-center rounded-2xl rounded-tl-none">
+                <Card className="bg-muted/40 p-4 border-border flex flex-row gap-1 items-center rounded-2xl rounded-tl-none">
                   <div className="size-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <div className="size-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                   <div className="size-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -153,6 +153,6 @@ const FeatureCard = ({ icon, title, desc, delay }: { icon: React.ReactNode, titl
             {icon}
         </div>
         <h3 className="font-bold text-sm text-foreground mb-1">{title}</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed max-w-[150px]">{desc}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed max-w-37.5">{desc}</p>
     </motion.div>
 );

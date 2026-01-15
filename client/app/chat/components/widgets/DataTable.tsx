@@ -3,7 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { TableData } from './../../types'; 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index";
 
 export const DataTable = ({ data }: { data: TableData }) => {
   return (
