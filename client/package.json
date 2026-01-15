@@ -1,0 +1,51 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "postinstall": "node ./scripts/setupPyodide.mjs"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@tanstack/react-query": "^5.90.16",
+    "@tanstack/react-query-devtools": "^5.91.2",
+    "axios": "^1.13.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.25.0",
+    "html-to-image": "^1.11.13",
+    "lucide-react": "^0.562.0",
+    "next": "16.1.1",
+    "pyodide": "^0.29.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.0",
+    "recharts": "^3.6.0",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.4.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.1",
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^5"
+  }
+}
