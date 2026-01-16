@@ -21,7 +21,9 @@ export interface FileContext {
 export interface AgentRequest {
   userMessage: string;
   fileContext: string;     // The schema string
-  history: Message[];
+  history?: Message[];
+  numericColumns?: string[];
+
   
   // File handling for Pyodide
   fileData?: ArrayBuffer;  // Actual file bytes (only needed on new upload)

@@ -27,7 +27,8 @@ export const buildFileContext = async (file: File): Promise<FileContext> => {
           return;
         }
 
-        const headers = jsonData[0] as string[];
+        const rawHeaders = jsonData[0] as string[];
+        const headers = rawHeaders.map(h => (h || '').toString().trim());
         const rows = jsonData.slice(1);
         
         // Create the context object

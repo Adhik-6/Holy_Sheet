@@ -319,4 +319,22 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 ```
 
+## Queries:
+1. Generate Charts
+- Bar Chart: "Show me total sales by Category."
+- Pie Chart: "What is the distribution of sales across different Regions?"
+- Line Chart: "Show me the monthly sales trend over the last year."
+
+2. Generate KPIs
+- "What is the total revenue and total profit?"
+- "What is the average transaction value?"
+- "What is the total number of units sold?"
+
+3. Output as Tables
+- "List the top 5 transactions with the highest Sales Amount."
+- "Show me a table of all 'Electronics' sales in the 'North' region."
+
+4. Summary (Markdown)
+- "Summarize the performance of the 'Clothing' category." (The AI should write a text summary calculating total sales and average profit for clothing).
+
 ## last

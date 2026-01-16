@@ -82,7 +82,17 @@ export async function processAgentRequest(params: AgentRequest): Promise<AIRespo
       ? `df = pd.read_csv('${fileName}')` 
       : `df = pd.read_excel('${fileName}')`;
       
-    await pyodide.runPythonAsync(readCmd);
+// Sanitize column names in Python immediately after loading
+    const cleanCmd = `
+import pandas as pd
+global df 
+df = ${readCmd}
+# Clean column names: strip whitespace and replace spaces with underscores if needed
+df.columns = df.columns.astype(str).str.strip()
+print("Columns cleaned:", df.columns.tolist())
+`;
+
+    await pyodide.runPythonAsync(cleanCmd);
     console.log("Data loaded into variable 'df'.");
   }
 
@@ -94,7 +104,13 @@ ${fileContext}
 
 USER REQUEST: "${userMessage}"
 
-Write the Python script now.
+---
+FINAL CHECKLIST BEFORE YOU WRITE CODE:
+1. Did you use the exact column names from the list above?
+2. Did you replace NaNs with None?
+3. Is your output pure Python code (no markdown)?
+
+Write the script now.
 `;
 
   // Step C: The Agent Loop (Generate Code -> Execute -> Retry)
@@ -125,6 +141,10 @@ _old_stdout = sys.stdout
 sys.stdout = _captured = StringIO()
 
 try:
+# --- CRITICAL FIX: explicit global declaration ---
+    global df 
+    if 'df' not in globals():
+        raise NameError("df is missing from global scope! Did the file load?")
 ${indentedUserCode}
 except Exception as e:
     # Restore stdout before raising so we can see the error
@@ -137,7 +157,7 @@ finally:
 
       // 3. Execute in Pyodide
       // We capture stdout to get the JSON result
-      pyodide.setStdout({ batched: (str: string) => { /* ignore intermediate prints */ } });
+      // pyodide.setStdout({ batched: (str: string) => { /* ignore intermediate prints */ } });
       
       // Run the code and capture the result of the LAST expression or print statement
       // We wrap it to ensure we capture the specific JSON print
@@ -160,15 +180,25 @@ finally:
       console.warn(`Attempt ${attempts} failed:`, err.message);
       lastError = err.message;
 
+      let columnInfo = "";
+      if (lastError?.includes("KeyError")) {
+        try {
+          // Run a tiny python script to get the actual columns
+          const actualColumns = pyodide.runPython("str(list(df.columns))");
+          columnInfo = `\nCRITICAL INFO: The available columns in 'df' are strictly: ${actualColumns}. YOU MUST USE THESE EXACT NAMES.`;
+          console.log("Detected KeyError. Feedback to AI:", columnInfo);
+        } catch (e) { /* ignore if df is somehow not there */ }
+      }
+
       // SELF-CORRECTION PROMPT
       currentPrompt = `
-      The previous python script you wrote failed with this error:
-      "${lastError}"
+The previous python script you wrote failed with this error:
+"${lastError}"
+${columnInfo}
+Original Request: "${userMessage}"
 
-      Original Request: "${userMessage}"
-      
-      Please analyze the error and RE-WRITE the script to fix it.
-      Remember: The dataframe is named 'df'.
+Please analyze the error and RE-WRITE the script to fix it.
+Don't be lazy.
       `;
     }
   }

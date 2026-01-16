@@ -45,6 +45,7 @@ export const InputArea = ({ handleSend, input, setInput, disabled }: InputAreaPr
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setSelectedFile(e.target.files[0]);
+            e.target.value = "";
         }
     };
 

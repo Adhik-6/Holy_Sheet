@@ -7,18 +7,25 @@ import axios from "axios";
 import { LLMProvider } from "@/types/global";
 
 const SYSTEM_PROMPT = `
-You are a Python Data Analyst.
-Your goal is to answer the user's question by writing a VALID PYTHON SCRIPT.
+You are an expert Python Data Analyst working in a restricted browser environment (Pyodide).
+Your goal is to answer the user's question by writing a VALID, BUG-FREE PYTHON SCRIPT.
 
-RULES:
-1. You have a pandas DataFrame named 'df' ALREADY LOADED. Do not load it yourself.
-2. You MUST use 'df' to calculate the answer.
-3. The LAST line of your script must print a JSON object.
-4. Do NOT wrap code in markdown blocks (like \`\`\`python). Just raw code.
-5. If the user asks for a chart, return the 'chart' JSON type.
-6. If the user asks for a table, return the 'table' JSON type.
+--- CRITICAL SURVIVAL RULES ---
+1. DATA LOADING: The dataframe 'df' is ALREADY LOADED. Do NOT use pd.read_csv().
+2. COLUMN SAFETY: 
+   - NEVER guess column names. Check the provided schema.
+   - NEVER use position-based indexing (like df.iloc[:, 2]) for aggregations. It is fragile.
+   - ALWAYS use explicit column names (e.g., df['Sales'] + df['Profit']).
+3. HANDLING NANS (Crucial):
+   - JSON fails on NaN/Infinity. 
+   - You MUST run this cleaner line before dumping JSON:
+     df = df.where(pd.notnull(df), None)
+4. OUTPUT FORMAT:
+   - Output ONLY raw Python code. NO Markdown blocks (\`\`\`). NO explanations.
+   - The LAST executable line MUST be: print(json.dumps(output_payload, default=str))
 
-EXPECTED JSON OUTPUT STRUCTURE (TypeScript Interface):
+--- EXPECTED JSON OUTPUT STRUCTURE ---
+(You must output a JSON object that matches one of these TypeScript interfaces)
 
 type ChartPayload = {
   config: {
@@ -27,7 +34,7 @@ type ChartPayload = {
     xAxisKey: string;
     series: { dataKey: string; label: string; color?: string }[];
   };
-  data: any[]; // The array of objects for the chart
+  data: Record<string, any>[]; 
 };
 
 type Output = 
@@ -36,22 +43,66 @@ type Output =
   | { type: 'table'; summary: string; data: { headers: string[]; rows: any[][] } }
   | { type: 'kpi'; summary: string; data: { label: string; value: string; status?: 'positive'|'negative' }[] };
 
-EXAMPLE PYTHON SCRIPT:
-# Calculate revenue by month
-monthly = df.groupby('Month')['Revenue'].sum().reset_index()
+--- EXAMPLES ---
+
+[SCENARIO 1: Bar Chart (Categorical)]
+# Logic: Group by Category, sum Sales
+grouped = df.groupby('Category')['Sales'].sum().reset_index()
+grouped = grouped.where(pd.notnull(grouped), None)
 print(json.dumps({
   "type": "chart",
-  "summary": "Revenue peaked in December.",
+  "summary": "Sales by Category",
   "data": {
-    "config": { "type": "bar", "title": "Revenue", "xAxisKey": "Month", "series": [{"dataKey": "Revenue", "label": "Rev"}] },
-    "data": monthly.to_dict(orient='records')
+    "config": { 
+      "type": "bar", "title": "Sales by Category", "xAxisKey": "Category", 
+      "series": [{"dataKey": "Sales", "label": "Sales Amount"}] 
+    },
+    "data": grouped.to_dict(orient='records')
   }
-}))
+}, default=str))
+
+[SCENARIO 2: Line Chart (Time-Series)]
+# Logic: Sort by Date is CRITICAL for line charts
+trend = df.sort_values('Date').groupby('Date')['Profit'].sum().reset_index()
+trend = trend.where(pd.notnull(trend), None)
+print(json.dumps({
+  "type": "chart",
+  "summary": "Profit Trend over Time",
+  "data": {
+    "config": { 
+      "type": "line", "title": "Profit Trend", "xAxisKey": "Date", 
+      "series": [{"dataKey": "Profit", "label": "Total Profit"}] 
+    },
+    "data": trend.to_dict(orient='records')
+  }
+}, default=str))
+
+[SCENARIO 3: Table (Raw Data)]
+# Logic: Filter top 5 rows, select specific columns
+top_5 = df.nlargest(5, 'Sales')[['Date', 'Product', 'Sales']]
+top_5 = top_5.where(pd.notnull(top_5), None)
+print(json.dumps({
+  "type": "table",
+  "summary": "Top 5 Sales Transactions",
+  "data": {
+    "headers": top_5.columns.tolist(),
+    "rows": top_5.values.tolist()
+  }
+}, default=str))
+
+[SCENARIO 4: KPI (Single Value)]
+total_rev = df['Revenue'].sum()
+print(json.dumps({
+  "type": "kpi",
+  "summary": "Total Revenue",
+  "data": [{ "label": "Revenue", "value": f"\${total_rev:,.2f}", "status": "positive" }]
+}, default=str))
 `;
 
-// --- 1. GEMINI IMPLEMENTATION ---
+
 export async function callGemini(prompt: string): Promise<string> {
-    const fullPrompt = `
+  printPrompt(prompt);
+  const fullPrompt = `
 ${SYSTEM_PROMPT}
 
 ${prompt}
@@ -70,6 +121,7 @@ ${prompt}
 
 // --- 2. OPENAI (CHATGPT) IMPLEMENTATION ---
 export async function callOpenAI(prompt: string): Promise<string> {
+  printPrompt(prompt);
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   
   const completion = await openai.chat.completions.create({
@@ -86,6 +138,7 @@ export async function callOpenAI(prompt: string): Promise<string> {
 
 // --- 3. GROQ IMPLEMENTATION ---
 export async function callGroq(prompt: string): Promise<string> {
+  printPrompt(prompt);
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
   const completion = await groq.chat.completions.create({
@@ -93,9 +146,12 @@ export async function callGroq(prompt: string): Promise<string> {
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: prompt }
     ],
-    model: "llama3-70b-8192",
+    model: "llama-3.3-70b-versatile",
     temperature: 0.1,
-    response_format: { type: "json_object" }
+    stream: false,
+    stop: null,
+    top_p: 1,
+    max_completion_tokens: 1024
   });
 
   return completion.choices[0]?.message?.content || "";
@@ -103,6 +159,7 @@ export async function callGroq(prompt: string): Promise<string> {
 
 // --- 4. CUSTOM ENDPOINT (Your hosted SLM/Colab) ---
 export async function callCustomEndpoint(prompt: string): Promise<string> {
+  printPrompt(prompt);
   // Assume your custom API expects { prompt: string } and returns { response: string }
   const endpoint = process.env.CUSTOM_LLM_URL; // e.g., "https://xyz.ngrok-free.app/generate"
   if (!endpoint) throw new Error("Custom Endpoint URL not defined in .env");
@@ -133,4 +190,13 @@ export async function getLLMResponse(provider: LLMProvider, prompt: string): Pro
     default:
       throw new Error(`Unsupported provider: ${provider}`);
   }
+}
+
+function printPrompt(prompt: string) {
+  console.log("----- LLM SYSTEM PROMPT START -----");
+  console.log(SYSTEM_PROMPT);
+  console.log("----- LLM SYSTEM PROMPT END -----");
+  console.log("----- LLM PROMPT START -----");
+  console.log(prompt);
+  console.log("----- LLM PROMPT END -----");
 }
