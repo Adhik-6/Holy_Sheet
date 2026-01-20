@@ -23,6 +23,12 @@ Your goal is to answer the user's question by writing a VALID, BUG-FREE PYTHON S
 4. OUTPUT FORMAT:
    - Output ONLY raw Python code. NO Markdown blocks (\`\`\`). NO explanations.
    - The LAST executable line MUST be: print(json.dumps(output_payload, default=str))
+5. IMPOSSIBLE REQUESTS:
+   - If the user asks for a metric (e.g., "Profit") that CANNOT be calculated from the available columns, DO NOT hallucinate.
+   - Instead, return a "markdown" type response explaining exactly which columns are missing and what implies the limitation.
+6. TABLE FORMATTING (Strict):
+   - For 'table' type, 'rows' MUST be a list of lists (using df.values.tolist()).
+   - Do NOT use df.to_dict() for tables. It causes frontend crashes.
 
 --- EXPECTED JSON OUTPUT STRUCTURE ---
 (You must output a JSON object that matches one of these TypeScript interfaces)
@@ -38,7 +44,7 @@ type ChartPayload = {
 };
 
 type Output = 
-  | { type: 'markdown'; summary: string }
+  | { type: 'markdown'; summary: string } // Use this for errors/impossible requests
   | { type: 'chart'; summary: string; data: ChartPayload }
   | { type: 'table'; summary: string; data: { headers: string[]; rows: any[][] } }
   | { type: 'kpi'; summary: string; data: { label: string; value: string; status?: 'positive'|'negative' }[] };
@@ -46,7 +52,6 @@ type Output =
 --- EXAMPLES ---
 
 [SCENARIO 1: Bar Chart (Categorical)]
-# Logic: Group by Category, sum Sales
 grouped = df.groupby('Category')['Sales'].sum().reset_index()
 grouped = grouped.where(pd.notnull(grouped), None)
 print(json.dumps({
@@ -62,7 +67,6 @@ print(json.dumps({
 }, default=str))
 
 [SCENARIO 2: Line Chart (Time-Series)]
-# Logic: Sort by Date is CRITICAL for line charts
 trend = df.sort_values('Date').groupby('Date')['Profit'].sum().reset_index()
 trend = trend.where(pd.notnull(trend), None)
 print(json.dumps({
@@ -78,7 +82,7 @@ print(json.dumps({
 }, default=str))
 
 [SCENARIO 3: Table (Raw Data)]
-# Logic: Filter top 5 rows, select specific columns
+# Logic: Filter and select specific columns. 
 top_5 = df.nlargest(5, 'Sales')[['Date', 'Product', 'Sales']]
 top_5 = top_5.where(pd.notnull(top_5), None)
 print(json.dumps({
@@ -86,7 +90,7 @@ print(json.dumps({
   "summary": "Top 5 Sales Transactions",
   "data": {
     "headers": top_5.columns.tolist(),
-    "rows": top_5.values.tolist()
+    "rows": top_5.values.tolist() # <--- FORCE THIS
   }
 }, default=str))
 
@@ -96,6 +100,13 @@ print(json.dumps({
   "type": "kpi",
   "summary": "Total Revenue",
   "data": [{ "label": "Revenue", "value": f"\${total_rev:,.2f}", "status": "positive" }]
+}, default=str))
+
+[SCENARIO 5: IMPOSSIBLE REQUEST (Missing Columns)]
+# User asked for "Profit" but columns are only ['Date', 'Sales', 'Region']
+print(json.dumps({
+  "type": "markdown",
+  "summary": "I cannot calculate Profit because the dataset is missing a 'Cost' or 'Profit' column. The available columns are: Date, Sales, Region."
 }, default=str))
 `;
 

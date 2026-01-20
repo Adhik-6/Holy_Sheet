@@ -72,26 +72,30 @@ export const DataChart = ({ data }: { data: ChartPayload }) => {
   };
 
   return (
-    <Card className="p-4 border-border bg-black/20 relative group">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-           <h4 className="text-sm font-bold text-foreground">{config.title}</h4>
-           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+    // RESPONSIVE: p-3 on mobile, p-4 on desktop
+    <Card className="p-3 sm:p-4 border-border bg-black/20 relative group">
+      {/* RESPONSIVE: mb-4 on mobile, mb-6 on desktop */}
+      <div className="flex justify-between items-start mb-4 sm:mb-6">
+        <div className="min-w-0 pr-2">
+           <h4 className="text-sm font-bold text-foreground truncate">{config.title}</h4>
+           <p className="text-[10px] text-muted-foreground uppercase tracking-widest truncate">
              {config.type} Chart • {chartData.length} Data Points
            </p>
         </div>
         
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* RESPONSIVE: Hidden on mobile group hover (always visible if clicked, but hover logic tricky on touch), kept opacity logic but ensured layout doesn't break */}
+        {/* <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleDownload}>
              <Download size={14} />
            </Button>
-           <Button variant="ghost" size="icon" className="h-6 w-6">
+           <Button variant="ghost" size="icon" className="h-6 w-6 hidden sm:inline-flex">
              <Maximize2 size={14} />
            </Button>
-        </div>
+        </div> */}
       </div>
 
-      <div ref={chartRef} className="h-75 w-full min-w-75">
+      {/* RESPONSIVE: h-[250px] on mobile, h-[300px] on sm+. Removed min-w-75 to prevent mobile overflow. */}
+      <div ref={chartRef} className="h-62.5 sm:h-75 w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           {config.type === 'line' ? (
             <LineChart data={chartData}>
@@ -104,6 +108,8 @@ export const DataChart = ({ data }: { data: ChartPayload }) => {
                 tickLine={false} 
                 axisLine={false} 
                 dy={10}
+                // RESPONSIVE: Prevents label overlap on small screens
+                minTickGap={30}
               />
               <YAxis 
                 stroke="#94a3b8"
@@ -111,6 +117,9 @@ export const DataChart = ({ data }: { data: ChartPayload }) => {
                 tickLine={false} 
                 axisLine={false} 
                 tickFormatter={(value) => `${value}`} 
+                // RESPONSIVE: Hide Y-axis on very small screens to save width? 
+                // Kept for now but gave it a narrow width if possible via Recharts props
+                width={40}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#22d3ee', strokeWidth: 1, strokeDasharray: '5 5' }} />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
@@ -139,12 +148,15 @@ export const DataChart = ({ data }: { data: ChartPayload }) => {
                  tickLine={false} 
                  axisLine={false}
                  dy={10}
+                 // RESPONSIVE: Prevents label overlap
+                 minTickGap={30}
                />
                <YAxis 
                  stroke="#94a3b8" 
                  tick={{ fill: "#94a3b8", fontSize: 12 }} 
                  tickLine={false} 
                  axisLine={false} 
+                 width={40}
                />
                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(148,163,184,0.1)' }} />
                <Legend wrapperStyle={{ paddingTop: '20px' }} />

@@ -27,18 +27,18 @@ const ComparisonTable = () => {
   };
 
   return (
-    <section id="comparison" className="py-32 px-6">
+    <section id="comparison" className="py-20 md:py-32 px-4 md:px-6">
       <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 md:mb-16">
            <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl font-black mb-4 tracking-tight"
+            className="text-3xl md:text-4xl font-black mb-4 tracking-tight"
            >
              The Local Advantage
            </motion.h2>
-           <p className="text-muted-foreground">Why privacy-focused teams are moving away from the cloud.</p>
+           <p className="text-muted-foreground text-sm md:text-base">Why privacy-focused teams are moving away from the cloud.</p>
         </div>
 
         <div 
@@ -56,36 +56,41 @@ const ComparisonTable = () => {
             />
           )}
 
-          <table className="w-full text-left relative z-10 border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-muted/20">
-                <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Feature</th>
-                <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Standard Cloud</th>
-                <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary text-center">ExcelGPT</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {rows.map((row, idx) => (
-                <motion.tr 
-                  key={idx}
-                  className="group transition-colors duration-200"
-                //   whileHover={{ fontWeight: '800px' }}
-                >
-                  <td className="px-10 py-7 text-sm font-bold">{row.feature}</td>
-                  <td className="px-10 py-7 text-sm text-center text-muted-foreground">
-                    {typeof row.cloud === 'boolean' ? (
-                      <X className="mx-auto text-destructive/70" size={18} />
-                    ) : row.cloud}
-                  </td>
-                  <td className="px-10 py-7 text-sm font-bold text-center text-primary">
-                    {typeof row.local === 'boolean' ? (
-                      <Check className="mx-auto text-primary" size={20} />
-                    ) : row.local}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+          {/* 1. SCROLL WRAPPER: Allows horizontal swipe on mobile */}
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            {/* 2. MIN-WIDTH: Forces table to keep its shape and trigger scroll instead of squishing */}
+            <table className="w-full text-left relative z-10 border-collapse min-w-150 md:min-w-0">
+              <thead>
+                <tr className="border-b border-border bg-muted/20">
+                  {/* 3. RESPONSIVE PADDING: px-4 on mobile, px-10 on desktop */}
+                  <th className="px-4 md:px-10 py-4 md:py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Feature</th>
+                  <th className="px-4 md:px-10 py-4 md:py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Standard Cloud</th>
+                  <th className="px-4 md:px-10 py-4 md:py-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary text-center">ExcelGPT</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rows.map((row, idx) => (
+                  <motion.tr 
+                    key={idx}
+                    className="group transition-colors duration-200 hover:bg-white/5"
+                  >
+                    <td className="px-4 md:px-10 py-4 md:py-7 text-xs md:text-sm font-bold whitespace-nowrap">{row.feature}</td>
+                    <td className="px-4 md:px-10 py-4 md:py-7 text-xs md:text-sm text-center text-muted-foreground whitespace-nowrap">
+                      {typeof row.cloud === 'boolean' ? (
+                        <X className="mx-auto text-destructive/70" size={18} />
+                      ) : row.cloud}
+                    </td>
+                    <td className="px-4 md:px-10 py-4 md:py-7 text-xs md:text-sm font-bold text-center text-primary whitespace-nowrap">
+                      {typeof row.local === 'boolean' ? (
+                        <Check className="mx-auto text-primary" size={20} />
+                      ) : row.local}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
         </div>
       </div>
     </section>

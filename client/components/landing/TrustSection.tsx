@@ -90,7 +90,7 @@ const TrustSection = () => {
                 </div>
                 
                 {/* Code Snippet */}
-                <div className="space-y-2 opacity-90">
+                <div className="space-y-2 opacity-90 overflow-x-scroll custom-scrollbar">
                   <p><span className="text-accent">import</span> pandas <span className="text-accent">as</span> pd</p>
                   <p>df = pd.read_csv(<span className="text-primary">'local_memory.csv'</span>)</p>
                   <p>df[<span className="text-primary">'Date'</span>] = pd.to_datetime(df[<span className="text-primary">'Date'</span>])</p>

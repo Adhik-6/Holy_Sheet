@@ -46,9 +46,9 @@ export interface TableData {
 
 export type AIResponse = 
   | { type: 'markdown'; summary: string; data?: never }
-  | { type: 'kpi'; summary: string; data: Kpi[] }
-  | { type: 'chart'; summary: string; data: ChartPayload }
-  | { type: 'table'; summary: string; data: TableData };
+  | { type: 'kpi'; code: String, summary: string; data: Kpi[] }
+  | { type: 'chart'; code: String, summary: string; data: ChartPayload }
+  | { type: 'table'; code: String, summary: string; data: TableData };
 
 // --- 3. The Message Interface ---
 export interface Message {

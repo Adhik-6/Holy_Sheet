@@ -5,7 +5,7 @@ import { LayoutDashboard, PlusCircle, LinkIcon, History, Settings, Table } from 
 
 export const Sidebar = () => {
     return (
-      <aside className="w-20 lg:w-64 flex flex-col justify-between border-r border-border bg-card/40 backdrop-blur-xl z-20 transition-all">
+      <aside className="w-20 lg:w-64 h-full flex flex-col justify-between border-r border-border bg-card/40 backdrop-blur-xl z-20 transition-all">
         <div className="flex flex-col gap-6 p-4">
           <Link href="/" className="flex items-center gap-3 px-2 cursor-pointer group">
             <div className="relative flex items-center justify-center size-10 rounded-xl bg-primary shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">

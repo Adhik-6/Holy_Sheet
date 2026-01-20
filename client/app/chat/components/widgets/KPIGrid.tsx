@@ -6,7 +6,8 @@ import { Kpi as KPI } from './../../types'; // Ensure import path matches your s
 
 export const KPIGrid = ({ data }: { data: KPI[] }) => {
   return (
-    <div className="grid grid-cols-2 gap-3 mt-2">
+    // RESPONSIVE: Stack (cols-1) on mobile, Grid (cols-2) on sm+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-2">
       {data.map((kpi, idx) => {
         // 1. Determine dynamic colors based on status
         const statusColor = 
@@ -24,13 +25,14 @@ export const KPIGrid = ({ data }: { data: KPI[] }) => {
         return (
           <Card 
             key={idx} 
-            className={`p-4 bg-card/40 backdrop-blur-xl border ${statusColor} relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 ease-out will-change-transform`}
+            // RESPONSIVE: p-3 on mobile, p-4 on desktop
+            className={`p-3 sm:p-4 bg-card/40 backdrop-blur-xl border ${statusColor} relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 ease-out will-change-transform`}
           >
             <div className="relative z-10 flex flex-col h-full justify-between">
               
               {/* Header: Label + Icon */}
               <div className="flex justify-between items-start mb-2">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold truncate max-w-[80%]">
                     {kpi.label}
                 </p>
                 {/* Neon Icon Container */}
@@ -42,22 +44,22 @@ export const KPIGrid = ({ data }: { data: KPI[] }) => {
               {/* Value & Trend */}
               <div>
                 <div className="flex items-baseline gap-2">
-                   <span className="text-2xl font-black text-foreground tracking-tight">
-                        {kpi.value}
+                   {/* RESPONSIVE: text-xl on mobile, text-2xl on desktop */}
+                   <span className="text-xl sm:text-2xl font-black text-foreground tracking-tight break-all">
+                       {kpi.value}
                    </span>
                 </div>
                 
                 {kpi.trend && (
                    <div className={`flex items-center gap-1.5 mt-1 text-xs font-bold ${statusColor.split(' ')[0]}`}>
                      <span>{kpi.trend}</span>
-                     <span className="text-[10px] opacity-60 font-medium uppercase tracking-wider text-muted-foreground">vs last month</span>
+                     <span className="text-[10px] opacity-60 font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">vs last month</span>
                    </div>
                 )}
               </div>
             </div>
 
             {/* 2. Stronger Ambient Gradient Blob */}
-            {/* Increased opacity from 20 -> 30/40 and added mix-blend-mode for better glowing effect */}
             <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-2xl opacity-30 ${blobColor} group-hover:opacity-50 transition-opacity duration-500`} />
             
             {/* Top Highlight Line */}

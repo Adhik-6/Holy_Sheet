@@ -1,157 +1,204 @@
 [
-    {
-        "id": "1",
-        "role": "user",
-        "content": "Hi ExcelGPT, can you give me a quick summary of our Q3 performance?",
-        "timestamp": "10:00 AM"
-    },
-    {
-        "id": "2",
-        "role": "assistant",
-        "timestamp": "10:01 AM",
-        "content": {
-            "type": "kpi",
-            "summary": "Certainly. Q3 showed strong growth across all sectors, with **Total Revenue** exceeding projections by 12%. Here are the high-level metrics:",
-            "data": [
-                { "label": "Total Revenue", "value": "$4.2M", "trend": "+12.5%", "status": "positive" },
-                { "label": "New Customers", "value": "1,240", "trend": "+8.3%", "status": "positive" },
-                { "label": "Churn Rate", "value": "2.1%", "trend": "-0.5%", "status": "positive" },
-                { "label": "Avg Deal Size", "value": "$15k", "trend": "-1.2%", "status": "negative" }
-            ]
-        }
-    },
-    {
-        "id": "3",
-        "role": "user",
-        "content": "That looks good. Show me the monthly revenue breakdown for the last quarter.",
-        "timestamp": "10:05 AM"
-    },
-    {
-        "id": "4",
-        "role": "assistant",
-        "timestamp": "10:05 AM",
-        "content": {
-            "type": "chart",
-            "summary": "Here is the monthly breakdown. August was our strongest month due to the Enterprise expansion campaign.",
-            "data": {
-                "config": {
-                    "type": "bar",
-                    "title": "Q3 Monthly Revenue",
-                    "xAxisKey": "month",
-                    "series": [
-                        { "dataKey": "revenue", "label": "Revenue", "color": "#22d3ee" },
-                        { "dataKey": "profit", "label": "Net Profit", "color": "#e879f9" }
-                    ]
-                },
-                "data": [
-                    { "month": "July", "revenue": 1200000, "profit": 400000 },
-                    { "month": "August", "revenue": 1800000, "profit": 750000 },
-                    { "month": "September", "revenue": 1400000, "profit": 550000 }
-                ]
-            }
-        }
-    },
-    {
-        "id": "5",
-        "role": "user",
-        "content": "Who were the top sales reps contributing to this?",
-        "timestamp": "10:08 AM"
-    },
-    {
-        "id": "6",
-        "role": "assistant",
-        "timestamp": "10:08 AM",
-        "content": {
-            "type": "table",
-            "summary": "Here are the top 5 performing representatives sorted by closed deal volume.",
-            "data": {
-                "headers": ["Rep Name", "Region", "Deals Closed", "Total Value"],
-                "rows": [
-                    ["Sarah Connor", "North America", "42", "$850,000"],
-                    ["Jean-Luc Picard", "Europe", "38", "$720,000"],
-                    ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
-                    ["Tony Stark", "North America", "28", "$610,000"],
-                    ["Diana Prince", "Europe", "25", "$550,000"]
-                ]
-            }
-        }
-    },
-    {
-        "id": "7",
-        "role": "user",
-        "content": "Can I see the traffic trend compared to last year?",
-        "timestamp": "10:12 AM"
-    },
-    {
-        "id": "8",
-        "role": "assistant",
-        "timestamp": "10:12 AM",
-        "content": {
-            "type": "chart",
-            "summary": "Web traffic has stabilized, though we see a slight dip in September compared to the previous year's spike.",
-            "data": {
-                "config": {
-                    "type": "line",
-                    "title": "Web Traffic: 2024 vs 2025",
-                    "xAxisKey": "month",
-                    "series": [
-                        { "dataKey": "current", "label": "2025 (Current)", "color": "#10b981" },
-                        { "dataKey": "previous", "label": "2024 (Previous)", "color": "#64748b" }
-                    ]
-                },
-                "data": [
-                    { "month": "Jul", "current": 45000, "previous": 42000 },
-                    { "month": "Aug", "current": 52000, "previous": 48000 },
-                    { "month": "Sep", "current": 49000, "previous": 55000 },
-                    { "month": "Oct", "current": 58000, "previous": 51000 }
-                ]
-            }
-        }
-    },
-    {
-        "id": "9",
-        "role": "user",
-        "content": "What is the market share distribution by region?",
-        "timestamp": "10:15 AM"
-    },
-    {
-        "id": "10",
-        "role": "assistant",
-        "timestamp": "10:15 AM",
-        "content": {
-            "type": "chart",
-            "summary": "North America continues to dominate with 45% of the market share, followed closely by Europe.",
-            "data": {
-                "config": {
-                    "type": "pie",
-                    "title": "Global Market Share",
-                    "xAxisKey": "region",
-                    "series": [
-                        { "dataKey": "value", "label": "Share", "color": "#22d3ee" }
-                    ]
-                },
-                "data": [
-                    { "region": "North America", "value": 45 },
-                    { "region": "Europe", "value": 30 },
-                    { "region": "Asia Pacific", "value": 15 },
-                    { "region": "Latin America", "value": 10 }
-                ]
-            }
-        }
-    },
-    {
-        "id": "11",
-        "role": "user",
-        "content": "Can you provide a detailed risk analysis for the upcoming quarter?",
-        "timestamp": "10:18 AM"
-    },
-    {
-        "id": "12",
-        "role": "assistant",
-        "timestamp": "10:18 AM",
-        "content": {
-            "type": "markdown",
-            "summary": "### Risk Analysis Report\n\n**Market Volatility & Supply Chain:**\nThe primary risk factor for Q4 remains the instability in the semiconductor supply chain. While our inventory is sufficient for the next 6 weeks, any further delays in shipment from the APAC region could impact our ability to meet the holiday demand. We are currently seeing a **15% variance** in lead times, which suggests we should trigger our secondary supplier contracts immediately to hedge against potential stockouts.\n\n**Competitive Landscape:**\nCompetitors have recently lowered their pricing tiers by approximately 10% in the Enterprise segment. While our churn rate remains low (2.1%), we anticipate increased pressure on our renewal negotiations. To mitigate this, we recommend focusing on our superior support SLA and launching the planned 'Q4 Loyalty Booster' feature set two weeks ahead of schedule to lock in high-value accounts before their fiscal year-end."
-        }
+  {
+    "id": "1",
+    "role": "user",
+    "content": "Hi ExcelGPT, can you give me a quick summary of our Q3 performance?",
+    "timestamp": "10:00 AM"
+  },
+
+  {
+    "id": "2",
+    "role": "assistant",
+    "timestamp": "10:01 AM",
+    "content": {
+      "type": "kpi",
+      "summary": "Certainly. Q3 showed strong growth across all sectors, with **Total Revenue** exceeding projections by 12%. Here are the high-level metrics:",
+      "data": [
+        { "label": "Total Revenue", "value": "$4.2M", "trend": "+12.5%", "status": "positive" },
+        { "label": "New Customers", "value": "1,240", "trend": "+8.3%", "status": "positive" },
+        { "label": "Churn Rate", "value": "2.1%", "trend": "-0.5%", "status": "positive" },
+        { "label": "Avg Deal Size", "value": "$15k", "trend": "-1.2%", "status": "negative" }
+      ],
+      "code": "import pandas as pd\n# Load Q3 Data\ndf = pd.read_csv('q3_performance.csv')\n\n# Calculate KPIs\ntotal_revenue = df['revenue'].sum()\nnew_customers = df['new_customers'].sum()\nchurn_rate = df['churned_users'].sum() / df['total_users'].sum() * 100\navg_deal_size = df['revenue'].mean()\n\n# Print Summary\nprint(f\"Total Revenue: ${total_revenue/1e6:.1f}M\")\nprint(f\"New Customers: {new_customers}\")\nprint(f\"Churn Rate: {churn_rate:.1f}%\")\nprint(f\"Avg Deal Size: ${avg_deal_size/1000:.0f}k\")"
     }
+  },
+  {
+    "id": "3",
+    "role": "user",
+    "content": "That looks good. Show me the monthly revenue breakdown for the last quarter.",
+    "timestamp": "10:05 AM"
+  },
+  {
+    "id": "4",
+    "role": "assistant",
+    "timestamp": "10:05 AM",
+    "content": {
+      "type": "chart",
+      "summary": "Here is the monthly breakdown. August was our strongest month due to the Enterprise expansion campaign.",
+      "data": {
+        "config": {
+          "type": "bar",
+          "title": "Q3 Monthly Revenue",
+          "xAxisKey": "month",
+          "series": [
+            { "dataKey": "revenue", "label": "Revenue", "color": "#22d3ee" },
+            { "dataKey": "profit", "label": "Net Profit", "color": "#e879f9" }
+          ]
+        },
+        "data": [
+          { "month": "July", "revenue": 1200000, "profit": 400000 },
+          { "month": "August", "revenue": 1800000, "profit": 750000 },
+          { "month": "September", "revenue": 1400000, "profit": 550000 }
+        ]
+      },
+      "code": "import pandas as pd\nimport matplotlib.pyplot as plt\n\n# Data Preparation\ndata = {\n    'Month': ['July', 'August', 'September'],\n    'Revenue': [1200000, 1800000, 1400000],\n    'Profit': [400000, 750000, 550000]\n}\ndf = pd.DataFrame(data)\n\n# Plotting Bar Chart\nplt.figure(figsize=(10, 6))\ndf.plot(x='Month', y=['Revenue', 'Profit'], kind='bar')\nplt.title('Q3 Monthly Revenue Breakdown')\nplt.ylabel('Amount ($)')\nplt.show()"
+    }
+  },
+  {
+    "id": "5",
+    "role": "user",
+    "content": "Who were the top sales reps contributing to this?",
+    "timestamp": "10:08 AM"
+  },
+  {
+    "id": "6",
+    "role": "assistant",
+    "timestamp": "10:08 AM",
+    "content": {
+      "type": "table",
+      "summary": "Here are the top 5 performing representatives sorted by closed deal volume.",
+      "data": {
+        "headers": ["Rep Name", "Region", "Deals Closed", "Total Value"],
+        "rows": [
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"],
+          ["Sarah Connor", "North America", "42", "$850,000"],
+          ["Jean-Luc Picard", "Europe", "38", "$720,000"],
+          ["Ellen Ripley", "Asia Pacific", "31", "$640,000"],
+          ["Tony Stark", "North America", "28", "$610,000"],
+          ["Diana Prince", "Europe", "25", "$550,000"]
+        ]
+      },
+      "code": "import pandas as pd\n# Load Sales Data\nsales_df = pd.read_csv('sales_data.csv')\n\n# Group by Rep and aggregate\ntop_reps = sales_df.groupby(['Rep Name', 'Region']).agg({\n    'Deal ID': 'count',\n    'Value': 'sum'\n}).reset_index()\n\n# Rename columns and sort\ntop_reps.columns = ['Rep Name', 'Region', 'Deals Closed', 'Total Value']\ntop_5 = top_reps.sort_values('Deals Closed', ascending=False).head(5)\n\nprint(top_5.to_markdown(index=False))"
+    }
+  },
+  {
+    "id": "7",
+    "role": "user",
+    "content": "Can I see the traffic trend compared to last year?",
+    "timestamp": "10:12 AM"
+  },
+  {
+    "id": "8",
+    "role": "assistant",
+    "timestamp": "10:12 AM",
+    "content": {
+      "type": "chart",
+      "summary": "Web traffic has stabilized, though we see a slight dip in September compared to the previous year's spike.",
+      "data": {
+        "config": {
+          "type": "line",
+          "title": "Web Traffic: 2024 vs 2025",
+          "xAxisKey": "month",
+          "series": [
+            { "dataKey": "current", "label": "2025 (Current)", "color": "#10b981" },
+            { "dataKey": "previous", "label": "2024 (Previous)", "color": "#64748b" }
+          ]
+        },
+        "data": [
+          { "month": "Jul", "current": 45000, "previous": 42000 },
+          { "month": "Aug", "current": 52000, "previous": 48000 },
+          { "month": "Sep", "current": 49000, "previous": 55000 },
+          { "month": "Oct", "current": 58000, "previous": 51000 }
+        ]
+      },
+      "code": "import pandas as pd\nimport matplotlib.pyplot as plt\n\n# Load Traffic Data\ntraffic_df = pd.read_csv('web_traffic.csv')\n\n# Filter for relevant months\ncomparison = traffic_df[traffic_df['Month'].isin(['Jul', 'Aug', 'Sep', 'Oct'])]\n\n# Plot Comparison\nplt.plot(comparison['Month'], comparison['2025_Visits'], label='2025 (Current)')\nplt.plot(comparison['Month'], comparison['2024_Visits'], label='2024 (Previous)', linestyle='--')\nplt.legend()\nplt.title('Web Traffic Comparison')\nplt.show()"
+    }
+  },
+  {
+    "id": "9",
+    "role": "user",
+    "content": "What is the market share distribution by region?",
+    "timestamp": "10:15 AM"
+  },
+  {
+    "id": "10",
+    "role": "assistant",
+    "timestamp": "10:15 AM",
+    "content": {
+      "type": "chart",
+      "summary": "North America continues to dominate with 45% of the market share, followed closely by Europe.",
+      "data": {
+        "config": {
+          "type": "pie",
+          "title": "Global Market Share",
+          "xAxisKey": "region",
+          "series": [
+            { "dataKey": "value", "label": "Share", "color": "#22d3ee" }
+          ]
+        },
+        "data": [
+          { "region": "North America", "value": 45 },
+          { "region": "Europe", "value": 30 },
+          { "region": "Asia Pacific", "value": 15 },
+          { "region": "Latin America", "value": 10 }
+        ]
+      },
+      "code": "import matplotlib.pyplot as plt\n# Market Share Data\nregions = ['North America', 'Europe', 'Asia Pacific', 'Latin America']\nshares = [45, 30, 15, 10]\n\n# Create Pie Chart\nplt.pie(shares, labels=regions, autopct='%1.1f%%', startangle=90)\nplt.title('Global Market Share Distribution')\nplt.show()"
+    }
+  },
+  {
+    "id": "11",
+    "role": "user",
+    "content": "Can you provide a detailed risk analysis for the upcoming quarter?",
+    "timestamp": "10:18 AM"
+  },
+  {
+    "id": "12",
+    "role": "assistant",
+    "timestamp": "10:18 AM",
+    "content": {
+      "type": "markdown",
+      "summary": "### Risk Analysis Report\n\n**Market Volatility & Supply Chain:**\nThe primary risk factor for Q4 remains the instability in the semiconductor supply chain. While our inventory is sufficient for the next 6 weeks, any further delays in shipment from the APAC region could impact our ability to meet the holiday demand. We are currently seeing a **15% variance** in lead times, which suggests we should trigger our secondary supplier contracts immediately to hedge against potential stockouts.\n\n**Competitive Landscape:**\nCompetitors have recently lowered their pricing tiers by approximately 10% in the Enterprise segment. While our churn rate remains low (2.1%), we anticipate increased pressure on our renewal negotiations. To mitigate this, we recommend focusing on our superior support SLA and launching the planned 'Q4 Loyalty Booster' feature set two weeks ahead of schedule to lock in high-value accounts before their fiscal year-end.",
+      "code": "# Risk Analysis Simulation Script\n\ndef calculate_stockout_risk(current_inventory, burn_rate, lead_time_variance):\n    weeks_of_stock = current_inventory / burn_rate\n    risk_score = 0\n    \n    if weeks_of_stock < 8 and lead_time_variance > 0.10:\n        risk_score = 0.9  # High\n    elif weeks_of_stock < 12:\n        risk_score = 0.5  # Medium\n    else:\n        risk_score = 0.2  # Low\n        \n    return risk_score\n\n# Current Parameters\ninventory = 6000  # units\nweekly_burn = 1000  # units\nvariance = 0.15  # 15%\n\nrisk = calculate_stockout_risk(inventory, weekly_burn, variance)\nprint(f\"Calculated Supply Chain Risk Score: {risk}\")"
+    }
+  }
 ]

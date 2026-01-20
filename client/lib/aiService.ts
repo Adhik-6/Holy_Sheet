@@ -3,6 +3,27 @@ import axios from 'axios';
 import { AIResponse } from '@/app/chat/types'; // Adjust path if needed
 import { AgentRequest } from '@/types/global';
 
+// Helper to safely extract code from LLM markdown response
+function extractCodeBlock(response: string): string {
+  // 1. Regex to find content specifically inside ```python ... ``` blocks
+  const pythonBlock = response.match(/```python([\s\S]*?)```/);
+  
+  if (pythonBlock && pythonBlock[1]) {
+    // Found a block! Return ONLY the content inside it
+    return pythonBlock[1].trim();
+  }
+  
+  // 2. Fallback: Check for generic ``` ... ``` blocks
+  const genericBlock = response.match(/```([\s\S]*?)```/);
+  if (genericBlock && genericBlock[1]) {
+    return genericBlock[1].trim();
+  }
+
+  // 3. Last Resort: If no blocks found, return the raw text 
+  // (but trimmed of potential "Here is the code:" prefixes)
+  return response.trim();
+}
+
 // --- 1. PYODIDE SINGLETON ---
 // We only want to load the Python engine once.
 let pyodideInstance: any = null;
@@ -124,10 +145,13 @@ Write the script now.
       console.log(`Attempt ${++attempts}: Generating Python code...`);
       
       // 1. Get Code from AI
-      const pythonCode = await callLLM(currentPrompt, params.useLocalModel);
+      
+      const rawResponse = await callLLM(currentPrompt, params.useLocalModel);
       
       // 2. Clean Code (remove markdown fences if LLM ignored instructions)
-      const cleanCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
+      // const cleanCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
+      // 2. Extract ONLY the code (Discarding the "chatty" explanation)
+      const cleanCode = extractCodeBlock(rawResponse);
       console.log("Executing Code:", cleanCode);
 
       const indentedUserCode = indentCode(cleanCode, 4);
@@ -174,7 +198,7 @@ finally:
         throw new Error("Invalid JSON structure returned");
       }
 
-      return jsonResponse as AIResponse;
+      return {...jsonResponse, code: indentedUserCode} as AIResponse;
 
     } catch (err: any) {
       console.warn(`Attempt ${attempts} failed:`, err.message);
