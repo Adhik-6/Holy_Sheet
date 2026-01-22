@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Holy Sheets</string>
+    <string name="title_activity_main">Holy Sheets</string>
+    <string name="package_name">com.chiggazz.holy_sheets</string>
+    <string name="custom_url_scheme">com.chiggazz.holy_sheets</string>
+</resources>

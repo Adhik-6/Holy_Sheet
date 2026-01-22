@@ -17,8 +17,8 @@
 An SaaS application that lets the user query the Excel sheet via NLP to get results in Excel-like table format (display & downloadable result), create a data visualization as asked, An offline mode that uses SLM to answer simple queries, and with LLM Evaluation feature (show reasonings, confidence meter).
 
 ## TODO
-1. Use shadcn components for landing & other pages
-2. When doing PWA:
+- [x] Use shadcn components for landing & other pages
+- [ ] When doing PWA:
 ```js
 // next.config.mjs
 const withPWA = require("@ducanh2912/next-pwa").default({
@@ -36,14 +36,14 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   ],
 });
 ```
-3. Version your service worker cache to deal with updates properly.
-4. Modify the `history` in `/chat/page.tsx` to send only the summary instead of the whole data set.
-5. Add some other packages necessary for data analysis in pyodide loading phase.
-6. Add a loader for page reloads.
-7. Check if the functions are only imported from barrel files (`index.ts`). Add barrel files if needed.
-8. Fine tune the LLM to give only the python code. It must not give answer for anything other than the data analysis field.
-9. Modify the system prompt such that LLM gives the summary in markdown format also make sure it uses safe characters.
-10. Download table as excel files, fix the font color on pdf download.
+- [ ] Version your service worker cache to deal with updates properly.
+- [ ] Modify the `history` in `/chat/page.tsx` to send only the summary instead of the whole data set.
+- [ ] Add some other packages necessary for data analysis in pyodide loading phase.
+- [ ] Add a loader for page reloads.
+- [ ] Check if the functions are only imported from barrel files (`index.ts`). Add barrel files if needed.
+- [ ] Fine tune the LLM to give only the python code It must not give answer for anything other than the data analysis field.
+- [ ] Modify the system prompt such that LLM gives the summary in markdown format also make sure it uses safe characters.
+- [ ] Download table as excel files, fix the font color on pdf download.
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.
@@ -288,6 +288,12 @@ How will we implement RAG 2.0 (Agentic RAG) here? I've previously told that the 
 Also previously i've been told we will ask the LLM to give us a python script and run the given scripts via pyodide in the browser itself. The python is good at handling tasks related to data stuff.
 
 We'll first start by discussing the approaches we're gonna take, don't jump into coding right off the bat.
+
+## Syncing build with android
+```bash
+npm run build
+npx cap sync
+```
 
 ## To get Pyodide offline later
 1. The solution is self hosting it. Unless you're using PWA.
