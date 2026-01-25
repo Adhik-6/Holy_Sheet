@@ -5,6 +5,7 @@ import Groq from "groq-sdk";
 import axios from "axios";
 
 import { LLMProvider } from "@/types/global";
+import { getRunningWllama } from "./modelLoader";
 
 const SYSTEM_PROMPT = `
 You are an expert Python Data Analyst working in a restricted browser environment (Pyodide).
@@ -184,6 +185,41 @@ export async function callCustomEndpoint(prompt: string): Promise<string> {
 
   // Adjust this based on your custom API's actual response structure
   return response.data.text || response.data.response; 
+}
+
+export async function callLocalSLM(prompt: string): Promise<string> {
+  printPrompt(prompt);
+  
+  // 1. Grab the instance
+  const wllama = getRunningWllama(); 
+
+  // 2. CONSTRUCT THE FULL PROMPT 
+  // SLMs usually follow a specific chat template. 
+  // Qwen 2.5 Coder uses ChatML format: <|im_start|>system...<|im_end|>
+  
+  const fullPrompt = `
+<|im_start|>system
+${SYSTEM_PROMPT}
+<|im_end|>
+<|im_start|>user
+${prompt}
+<|im_end|>
+<|im_start|>assistant
+`;
+
+  console.log("🧠 SLM Input Tokens:", fullPrompt.length / 4);
+
+  // 3. RUN INFERENCE
+  const completion = await wllama.createCompletion(fullPrompt, {
+    nPredict: 2048,   // Increased from 1024 (Code can be long)
+    sampling: {
+      temp: 0.1,      // Keep low for code
+      top_p: 0.95,
+      penalty_repeat: 1.1, // Helps prevent loops
+    },
+  });
+
+  return completion;
 }
 
 // --- THE SWITCHER (FACTORY) ---

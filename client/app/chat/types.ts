@@ -1,5 +1,7 @@
 // app/types.ts
 
+export type ModelMode = "auto" | "llm" | "slm";
+
 // --- 1. Sub-Types ---
 
 export interface Kpi {

@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   //   };
   //   return config;
   // },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // 🔴 FORCE wllama to use the compiled JS file, not the raw TS file
+      '@wllama/wllama': '@wllama/wllama/esm/index.js',
+    };
+    return config;
+  },
   output: "export",
   images: {
     unoptimized: true,

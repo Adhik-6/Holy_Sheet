@@ -9,7 +9,10 @@ import { DataChart } from "./widgets/DataChart";
 import { DataTable } from "./widgets/DataTable";
 import { KPIGrid } from "./widgets/KPIGrid";
 
+import { MobileGuards } from "./mobileGuards";
+
 export {
     InputArea, ChatArea, ChatMessage, Header, Sidebar, ScriptDialog,
-    DataChart, DataTable, KPIGrid
+    DataChart, DataTable, KPIGrid, 
+    MobileGuards
 }

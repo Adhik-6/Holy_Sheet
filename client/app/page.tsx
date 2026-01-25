@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,18 @@ import {
 } from "@/components/landing";
 
 function LandingPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const isCapacitor =
+      typeof window !== "undefined" &&
+      (window as any).Capacitor?.isNativePlatform?.();
+
+    if (isCapacitor) {
+      router.replace("/chat"); // 🔥 replace removes `/` from history
+    }
+  }, [router]);
+  
   return (
     <div className="flex flex-col min-h-screen selection:bg-primary/30 selection:text-primary-foreground">
       <Header />

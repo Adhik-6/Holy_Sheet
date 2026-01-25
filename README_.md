@@ -44,6 +44,9 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 - [ ] Fine tune the LLM to give only the python code It must not give answer for anything other than the data analysis field.
 - [ ] Modify the system prompt such that LLM gives the summary in markdown format also make sure it uses safe characters.
 - [ ] Download table as excel files, fix the font color on pdf download.
+- [ ] Add a marigin to html tag on mobile view.
+- [ ] Address the security issues related to `.env` varible exposure in frontend.
+- [ ] Change logo and name.
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.

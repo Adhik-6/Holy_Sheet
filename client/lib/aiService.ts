@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { AIResponse } from '@/app/chat/types'; // Adjust path if needed
 import { AgentRequest } from '@/types/global';
+import { callLocalSLM, getRunningWllama } from './index';
 
 // Helper to safely extract code from LLM markdown response
 function extractCodeBlock(response: string): string {
@@ -238,7 +239,8 @@ Don't be lazy.
 
 async function callLLM(prompt: string, useLocal: boolean = false): Promise<string> {
   if (useLocal) {
-    throw new Error("Local LLM not implemented yet");
+    console.log("🧠 Using Local SLM...");
+    return await callLocalSLM(prompt);
   } else {
     try {
       // call the Next.js API Route using Axios
