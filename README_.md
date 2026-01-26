@@ -43,10 +43,11 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 - [ ] Check if the functions are only imported from barrel files (`index.ts`). Add barrel files if needed.
 - [ ] Fine tune the LLM to give only the python code It must not give answer for anything other than the data analysis field.
 - [ ] Modify the system prompt such that LLM gives the summary in markdown format also make sure it uses safe characters.
-- [ ] Download table as excel files, fix the font color on pdf download.
-- [ ] Add a marigin to html tag on mobile view.
+- [x] Download table as excel files, fix the font color on pdf download.
+- [x] Add a marigin to html tag on mobile view.
 - [ ] Address the security issues related to `.env` varible exposure in frontend.
 - [ ] Change logo and name.
+- [ ] Modify next.config.ts according to building APK (also for capacitor.config.json)
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.
@@ -347,5 +348,15 @@ export default nextConfig;
 
 4. Summary (Markdown)
 - "Summarize the performance of the 'Clothing' category." (The AI should write a text summary calculating total sales and average profit for clothing).
+
+## Testing app on mobile
+```bash
+adb devices # outputs the connected device
+npx cap sync
+adb reverse tcp:3000 tcp:3000  # outputs: 3000 at last
+npx cap open android # opens android studio
+# Run the app from android studio
+```
+- To inscpect the logs go to: `chrome://inspect/#devices`
 
 ## last

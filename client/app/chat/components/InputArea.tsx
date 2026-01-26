@@ -59,7 +59,7 @@ export const InputArea = ({ handleSend, input, setInput, disabled }: InputAreaPr
 
     return (
         // RESPONSIVE: Reduced padding on mobile (p-2) vs desktop (p-4 md:px-8)
-        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 md:px-8 md:pb-6 z-30 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 md:px-8 md:pb-6 z-30 pointer-events-none pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           <div className="max-w-4xl mx-auto relative group pointer-events-auto">
             {/* Glow Effect */}
             <div className="absolute -inset-0.5 bg-linear-to-r from-primary/30 to-accent/30 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>

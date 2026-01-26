@@ -4,6 +4,7 @@ import { RootProvider } from "@/components/providers/root-provider"
 import meta from "@/metadata.json";
 import { Inter, JetBrains_Mono } from "next/font/google"; 
 import { MobileGuards } from "./chat/components/index";
+import { CoiLoader } from "@/components/landing/CoiLoader";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -32,8 +33,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-background text-foreground grid-bg antialiased pt-[env(safe-area-inset-top)]`}>
+      <head>
+        {/* <meta httpEquiv="origin-trial" content="...token..." /> 
+        {/* <script src="/coi-serviceworker.js" async></script> */}
+      </head>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-background text-foreground grid-bg antialiased`}>
         {/* Wrap the entire app in your provider here */}
+          <CoiLoader />
           <MobileGuards />
           <RootProvider>
             {children}

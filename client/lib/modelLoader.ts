@@ -1,6 +1,7 @@
 import { Wllama } from '@wllama/wllama';
+import { QWEN_MODEL_URL } from './constants'; 
 
-const REMOTE_MODEL_URL = "https://huggingface.co/Adhik6495/Qwen2.5-Coder-3B-Instruct/resolve/main/qwen2.5-coder-3b.gguf?download=true";
+const REMOTE_MODEL_URL = QWEN_MODEL_URL;
 
 // 1. THE SINGLETON STORAGE
 // This variable lives in memory as long as the app is running
@@ -10,9 +11,7 @@ export async function loadModelForChat(
   onProgress?: (progress: number) => void
 ): Promise<Wllama> {
   // Return existing instance if available (Fast Path)
-  if (activeWllamaInstance) {
-    return activeWllamaInstance;
-  }
+  if (activeWllamaInstance) return activeWllamaInstance;
 
   console.log("⚙️ Configuring Wllama...");
   const wllama = new Wllama({
@@ -26,6 +25,7 @@ export async function loadModelForChat(
   console.log("🚀 Loading model into RAM...");
   await wllama.loadModelFromUrl(REMOTE_MODEL_URL, {
     n_ctx: 2048,
+    n_threads: 4,
     progressCallback: ({ loaded, total }) => {
       if (onProgress) onProgress(Math.round((loaded / total) * 100));
     }

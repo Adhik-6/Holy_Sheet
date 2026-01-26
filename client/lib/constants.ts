@@ -1,0 +1,1 @@
+export const QWEN_MODEL_URL = "https://huggingface.co/Adhik6495/Qwen2.5-Coder-3B-Instruct/resolve/main/qwen2.5-coder-3b.gguf?download=true";

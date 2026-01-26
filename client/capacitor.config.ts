@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Holy Sheets',
   webDir: 'out',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    url: 'http://localhost:3000',
+    cleartext: true
   },
 };
 

@@ -26,6 +26,9 @@ importers:
       '@capacitor/network':
         specifier: ^8.0.0
         version: 8.0.0(@capacitor/core@8.0.1)
+      '@capacitor/status-bar':
+        specifier: ^8.0.0
+        version: 8.0.0(@capacitor/core@8.0.1)
       '@google/generative-ai':
         specifier: ^0.24.1
         version: 0.24.1
@@ -259,6 +262,11 @@ packages:
 
   '@capacitor/network@8.0.0':
     resolution: {integrity: sha512-fgvB7pNKn8pKavuzys218j4YuA5euNfavp7nS3NuwWKWNupZAlbucfnl75lazxCyVF/ZRjzYVTb4vtTEfFrK1A==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor/status-bar@8.0.0':
+    resolution: {integrity: sha512-aIj3bc7z8lfPgOen8HlrBrkfnxpFnh21OCx6jCUx4Mvv+B6eEkUQ49b32DOddgVfr+igRHLX2SYi7duqIsNDXg==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -3774,6 +3782,10 @@ snapshots:
       '@capacitor/synapse': 1.0.4
 
   '@capacitor/network@8.0.0(@capacitor/core@8.0.1)':
+    dependencies:
+      '@capacitor/core': 8.0.1
+
+  '@capacitor/status-bar@8.0.0(@capacitor/core@8.0.1)':
     dependencies:
       '@capacitor/core': 8.0.1
 

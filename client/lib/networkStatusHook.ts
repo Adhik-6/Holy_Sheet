@@ -1,48 +1,25 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Capacitor } from "@capacitor/core";
 import { Network } from "@capacitor/network";
 
 export function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    const initNetwork = async () => {
-      // 1. Check initial status
-      if (Capacitor.isNativePlatform()) {
-        const status = await Network.getStatus();
-        setIsOnline(status.connected);
-      } else {
-        setIsOnline(navigator.onLine);
-      }
+    // 1. Check Initial Status (Works on Web & Mobile)
+    Network.getStatus().then(status => setIsOnline(status.connected));
+
+    // 2. Setup Listener (Works on Web & Mobile)
+    const listener = Network.addListener('networkStatusChange', status => {
+      console.log('Network status changed:', status.connected); // Optional debug log
+      setIsOnline(status.connected);
+    });
+
+    // 3. CLEANUP (Crucial to prevent the log spam you saw earlier)
+    return () => {
+      listener.then(handle => handle.remove());
     };
-
-    initNetwork();
-
-    // 2. Setup Listeners
-    if (Capacitor.isNativePlatform()) {
-      // NATIVE LISTENER (Better for Mobile)
-      const handle = Network.addListener('networkStatusChange', status => {
-        setIsOnline(status.connected);
-      });
-      
-      return () => {
-        handle.then(h => h.remove());
-      };
-    } else {
-      // WEB LISTENER (Standard Browser API)
-      const handleOnline = () => setIsOnline(true);
-      const handleOffline = () => setIsOnline(false);
-
-      window.addEventListener("online", handleOnline);
-      window.addEventListener("offline", handleOffline);
-
-      return () => {
-        window.removeEventListener("online", handleOnline);
-        window.removeEventListener("offline", handleOffline);
-      };
-    }
   }, []);
 
   return isOnline;

@@ -25,9 +25,16 @@ const Header = () => {
       initial={{ y: -64 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center bg-background/15 backdrop-blur-lg border-b border-border"
+      className="
+        fixed top-0 left-0 right-0 z-50 
+        h-auto
+        pt-[env(safe-area-inset-top)]
+        bg-background/15 backdrop-blur-lg border-b border-border
+      "
     >
-      <div className="container mx-auto px-6 flex justify-between items-center">
+      {/* 3. KEEP INNER CONTENT HEIGHT CONSISTENT (64px / h-16) */}
+      <div className="container mx-auto px-6 flex justify-between items-center h-16">
+        
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-2 group cursor-pointer">
           <motion.div
@@ -39,7 +46,7 @@ const Header = () => {
           <span className="text-xl font-black tracking-tight">ExcelGPT</span>
         </Link>
 
-        {/* NAVIGATION (Desktop) - RESTORED ORIGINAL EFFECT */}
+        {/* NAVIGATION (Desktop) */}
         <nav className="hidden md:flex items-center gap-2 relative">
           {navItems.map((item) => (
             <Link
@@ -50,7 +57,6 @@ const Header = () => {
               className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative rounded-lg"
             >
               <span className="relative z-10">{item}</span>
-
               {hoveredLink === item && (
                 <motion.span
                   layoutId="nav-glow"
@@ -64,7 +70,6 @@ const Header = () => {
 
         {/* CTA BUTTONS */}
         <div className="flex items-center gap-3">
-          {/* Sign In */}
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               variant="ghost"
@@ -74,7 +79,6 @@ const Header = () => {
             </Button>
           </motion.div>
 
-          {/* Get Started - SAME glow effect */}
           <motion.div
             whileHover={{
               scale: 1.05,
@@ -97,7 +101,8 @@ const Header = () => {
                 </Button>
               </SheetTrigger>
 
-              <SheetContent side="right" className="w-[320px]">
+              {/* 4. SAFE AREA PADDING FOR MOBILE DRAWER */}
+              <SheetContent side="right" className="w-[320px] pt-[calc(env(safe-area-inset-top)+1.5rem)]">
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
                     <div className="bg-primary p-1.5 rounded-lg text-primary-foreground">

@@ -15,6 +15,7 @@ import {
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import { Wllama } from '@wllama/wllama';
+import { QWEN_MODEL_URL } from '@/lib/constants'; // Import here too
 
 // --- DATA DEFINITIONS ---
 
@@ -99,23 +100,33 @@ export default function ModelManagerPage() {
   }, []);
 
   const checkDownloadedModels = async () => {
-    if (!isMobile) return; // Skip checks on web
-
+    // We remove the !isMobile check because Cache works on Web too!
+    
     const statusMap: Record<string, boolean> = {};
     
-    for (const model of AVAILABLE_MODELS) {
-      if (!model.isCloud && model.filename) {
-        try {
-          await Filesystem.stat({
-            path: model.filename,
-            directory: Directory.Data
-          });
-          statusMap[model.id] = true;
-        } catch (e) {
-          statusMap[model.id] = false;
+    try {
+      // Initialize a lightweight instance (no model loaded yet)
+      const wllama = new Wllama({
+        'single-thread/wllama.wasm': '/wllama/single-thread/wllama.wasm',
+        'multi-thread/wllama.wasm': '/wllama/multi-thread/wllama.wasm',
+      });
+
+      for (const model of AVAILABLE_MODELS) {
+        if (!model.isCloud && model.id === 'qwen-2.5-coder-3b') {
+          // CHECK THE CACHE (Database), NOT THE FILESYSTEM
+          // We use the exact same URL constant as the key
+          const size = await wllama.cacheManager.getSize(QWEN_MODEL_URL);
+          
+          console.log(`Cache check for ${model.name}: ${size} bytes`);
+          
+          // If size is greater than 0, it exists!
+          statusMap[model.id] = size > 0;
         }
       }
+    } catch (e) {
+      console.error("Failed to check cache:", e);
     }
+    
     setDownloadedModels(statusMap);
   };
 
@@ -126,6 +137,9 @@ export default function ModelManagerPage() {
     setDownloadingId(model.id);
     setProgress(0);
 
+    const urlToUse = model.id === 'qwen-2.5-coder-3b' ? QWEN_MODEL_URL : model.downloadUrl;
+    if (!urlToUse) return;
+
     try {
       // Initialize temp Wllama just for downloading
         const wllama = new Wllama({
@@ -135,7 +149,7 @@ export default function ModelManagerPage() {
 
       console.log(`⬇️ Starting download for ${model.name}...`);
       
-      await wllama.loadModelFromUrl(model.downloadUrl, {
+      await wllama.loadModelFromUrl(urlToUse, {
         n_ctx: 512, // Minimal context for download-check
         progressCallback: ({ loaded, total }) => {
           const p = Math.round((loaded / total) * 100);
