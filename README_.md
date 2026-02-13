@@ -49,6 +49,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 - [ ] Change logo and name.
 - [ ] Modify next.config.ts according to building APK (also for capacitor.config.json)
 - [ ] Update the filename and download URL for the SLM model in `models/page.tsx` (also make sure it matches the filename in the C++ code for loading the model), also in `lib/constants.ts`.
+- [ ] Remove unnecessary lines from capacitor.config.ts for production build.
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.
