@@ -6,7 +6,8 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "eslint",
-    "build": "next build"
+    "build": "next build",
+    "build:mobile": "cross-env MOBILE_BUILD=true next build"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
