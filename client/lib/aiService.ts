@@ -241,9 +241,10 @@ async function callModel(prompt: string, useLocal: boolean = false): Promise<str
   } else {
     try {
       let BackendUrl = process.env.NODE_ENV === "production"
-        ? process.env.BACKEND_URL_PROD
+        ? process.env.NEXT_PUBLIC_BACKEND_URL_PROD
         : "";
       // call the Next.js API Route using Axios
+      console.log("Backend URL:", BackendUrl);
       const response = await axios.post(`${BackendUrl}/api/chat`, {
         prompt: prompt,
         provider: useSettingsStore.getState().activeLLM || "groq"
