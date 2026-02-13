@@ -3,9 +3,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 import Groq from "groq-sdk";
 import axios from "axios";
-
 import { LLMProvider } from "@/types/global";
-import { getRunningWllama } from "./modelLoader";
+
+import NativeLlama from './nativeLlama';
+import { isModelLoaded, loadModelForChat } from './modelLoader';
+// import { getModelPath, checkNativeModelExists } from './nativeModelManager';
+
 
 const SYSTEM_PROMPT = `
 You are an expert Python Data Analyst working in a restricted browser environment (Pyodide).
@@ -111,7 +114,33 @@ print(json.dumps({
 }, default=str))
 `;
 
+const SLM_SYSTEM_PROMPT = `
+You are a Python Data Analyst in Pyodide.
+Dataframe 'df' is loaded.
 
+RULES:
+1. USE EXACT COLUMN NAMES.
+2. CLEAN NANS: df = df.where(pd.notnull(df), None)
+3. OUTPUT: Raw Python code. Last line: print(json.dumps(output_payload, default=str))
+4. NO MARKDOWN.
+
+OUTPUT SCHEMA:
+type Output = 
+  | { type: 'chart'; ... }
+  | { type: 'table'; data: { headers: string[], rows: any[][] } }
+  | { type: 'kpi'; ... }
+
+EXAMPLE (Table):
+top = df.nlargest(5, 'Sales')[['Date', 'Sales']]
+top = top.where(pd.notnull(top), None)
+print(json.dumps({
+  "type": "table",
+  "summary": "Top 5 Sales",
+  "data": { "headers": top.columns.tolist(), "rows": top.values.tolist() }
+}, default=str))
+`;
+
+// --- 2. Gemini IMPLEMENTATION ---
 export async function callGemini(prompt: string): Promise<string> {
   printPrompt(prompt);
   const fullPrompt = `
@@ -188,40 +217,12 @@ export async function callCustomEndpoint(prompt: string): Promise<string> {
 }
 
 export async function callLocalSLM(prompt: string): Promise<string> {
-  const SLM_SYSTEM_PROMPT = `
-You are a Python Data Analyst in a Pyodide environment.
-The dataframe 'df' is ALREADY LOADED.
-
---- RULES ---
-1. USE EXACT COLUMN NAMES. Check the schema.
-2. CLEAN NANS: df = df.where(pd.notnull(df), None)
-3. OUTPUT: Raw Python code only. Last line must be: print(json.dumps(output_payload, default=str))
-4. NO MARKDOWN. NO EXPLANATIONS.
-
---- OUTPUT SCHEMA ---
-type Output = 
-  | { type: 'chart'; summary: string; data: { config: { type: 'bar'|'line'|'pie', ... }, data: any[] } }
-  | { type: 'table'; summary: string; data: { headers: string[], rows: any[][] } }
-  | { type: 'kpi'; summary: string; data: { label: string, value: string }[] }
-  | { type: 'markdown'; summary: string }
-
---- EXAMPLE (Table) ---
-top = df.nlargest(5, 'Sales')[['Date', 'Sales']]
-top = top.where(pd.notnull(top), None)
-print(json.dumps({
-  "type": "table",
-  "summary": "Top 5 Sales",
-  "data": { "headers": top.columns.tolist(), "rows": top.values.tolist() }
-}, default=str))
-`;
-  printPrompt(prompt);
   
-  // 1. Grab the instance
-  const wllama = getRunningWllama(); 
-
-  // 2. CONSTRUCT THE FULL PROMPT 
-  // SLMs usually follow a specific chat template. 
-  // Qwen 2.5 Coder uses ChatML format: <|im_start|>system...<|im_end|>
+  // Auto-recovery: If UI didn't load it, load it now.
+  if (!isModelLoaded()) {
+    console.warn("⚠️ Model was not loaded. Loading now...");
+    await loadModelForChat();
+  }
   
   const fullPrompt = `
 <|im_start|>system
@@ -233,19 +234,21 @@ ${prompt}
 <|im_start|>assistant
 `;
 
-  console.log("🧠 SLM Input Tokens:", fullPrompt.length / 4);
+  printPrompt(fullPrompt);
+  console.log("🚀 Starting NATIVE Engine...");
 
-  // 3. RUN INFERENCE
-  const completion = await wllama.createCompletion(fullPrompt, {
-    nPredict: 2048,   // Increased from 1024 (Code can be long)
-    sampling: {
-      temp: 0.1,      // Keep low for code
-      top_p: 0.95,
-      penalty_repeat: 1.1, // Helps prevent loops
-    },
-  });
-
-  return completion;
+  try {
+    const result = await NativeLlama.generate({
+      prompt: "Q: Say hello.\nA:",   // pass fullPrompt here
+      temperature: 0.1,
+      nPredict: 256
+    });
+    console.log("✅ Native Inference Completed");
+    return result.text;
+  } catch (e: any) {
+    console.error("Native Inference Failed:", e);
+    throw e;
+  }
 }
 
 // --- THE SWITCHER (FACTORY) ---

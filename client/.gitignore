@@ -42,3 +42,9 @@ next-env.d.ts
 
 # Personal
 not-git/
+
+# --- AI Models & Data ---
+*.gguf
+*.bin
+*.pt
+*.safetensors

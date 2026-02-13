@@ -1,29 +1,29 @@
 // lib/aiService.ts
 import axios from 'axios';
-import { AIResponse } from '@/app/chat/types'; // Adjust path if needed
+import { AIResponse } from '@/app/(app)/chat/types'; // Adjust path if needed
+import { useSettingsStore } from '@/store/settingsStore';
 import { AgentRequest } from '@/types/global';
-import { callLocalSLM, getRunningWllama } from './index';
+import { callLocalSLM } from './llm'; // Imported from llm.ts
 
 // Helper to safely extract code from LLM markdown response
 function extractCodeBlock(response: string): string {
   // 1. Regex to find content specifically inside ```python ... ``` blocks
   const pythonBlock = response.match(/```python([\s\S]*?)```/);
-  
-  if (pythonBlock && pythonBlock[1]) {
-    // Found a block! Return ONLY the content inside it
-    return pythonBlock[1].trim();
-  }
+  if (pythonBlock && pythonBlock[1]) return pythonBlock[1].trim();
   
   // 2. Fallback: Check for generic ``` ... ``` blocks
   const genericBlock = response.match(/```([\s\S]*?)```/);
-  if (genericBlock && genericBlock[1]) {
-    return genericBlock[1].trim();
-  }
+  if (genericBlock && genericBlock[1]) return genericBlock[1].trim();
 
-  // 3. Last Resort: If no blocks found, return the raw text 
-  // (but trimmed of potential "Here is the code:" prefixes)
+  // 3. Last Resort: Return raw text
   return response.trim();
 }
+
+// --- HELPER: Indent Code ---
+const indentCode = (code: string, indentLevel: number = 4): string => {
+  const indent = ' '.repeat(indentLevel);
+  return code.split('\n').map(line => indent + line).join('\n');
+};
 
 // --- 1. PYODIDE SINGLETON ---
 // We only want to load the Python engine once.
@@ -63,30 +63,23 @@ export async function getPyodide() {
   // 3. Manually Install OpenPyXL from local wheels
   // We use micropip to install the specific .whl files we just downloaded
   const micropip = pyodideInstance.pyimport("micropip");
-  
   console.log("Installing OpenPyXL locally...");
-  await micropip.install([
-    "/pyodide/et_xmlfile-1.1.0-py3-none-any.whl", 
-    "/pyodide/openpyxl-3.1.2-py2.py3-none-any.whl"
-  ]);
+  try {
+    // Try local wheels first
+    await micropip.install([
+      "/pyodide/et_xmlfile-1.1.0-py3-none-any.whl", 
+      "/pyodide/openpyxl-3.1.2-py2.py3-none-any.whl"
+    ]);
+  } catch (e) {
+    console.warn("Local wheels not found, falling back to network install");
+    await micropip.install("openpyxl");
+  }
   
   // 4. Setup Python Environment
-  await pyodideInstance.runPythonAsync(`
-    import pandas as pd
-    import json
-  `);
-
+  await pyodideInstance.runPythonAsync(`import pandas as pd\nimport json`);
   console.log("Pyodide Ready.");
   return pyodideInstance;
 }
-
-const indentCode = (code: string, indentLevel: number = 4): string => {
-  const indent = ' '.repeat(indentLevel);
-  return code
-    .split('\n')
-    .map(line => indent + line)
-    .join('\n');
-};
 
 // --- 3. THE SERVICE ---
 export async function processAgentRequest(params: AgentRequest): Promise<AIResponse> {
@@ -137,7 +130,7 @@ Write the script now.
 
   // Step C: The Agent Loop (Generate Code -> Execute -> Retry)
   let attempts = 0;
-  const maxRetries = 2;
+  const maxRetries = params.useLocalModel?1:2;
   let lastError: string | null = null;
   let currentPrompt = fullPrompt;
 
@@ -145,10 +138,18 @@ Write the script now.
     try {
       console.log(`Attempt ${++attempts}: Generating Python code...`);
       
-      // 1. Get Code from AI
+      // 1. GET CODE FROM AI (Native or Cloud)
+      // let rawResponse = "";
       
-      const rawResponse = await callLLM(currentPrompt, params.useLocalModel);
-      
+      // if (params.useLocalModel) {
+      //   // Calls the Native Plugin via llm.ts
+      //   rawResponse = await callLocalSLM(currentPrompt);
+      // } else {
+      //   // Calls Cloud API via llm.ts (defaulting to gemini for now)
+      //   rawResponse = await getLLMResponse('gemini', currentPrompt);
+      // }      
+
+      const rawResponse = await callModel(currentPrompt, params.useLocalModel);
       // 2. Clean Code (remove markdown fences if LLM ignored instructions)
       // const cleanCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
       // 2. Extract ONLY the code (Discarding the "chatty" explanation)
@@ -217,13 +218,10 @@ finally:
 
       // SELF-CORRECTION PROMPT
       currentPrompt = `
-The previous python script you wrote failed with this error:
-"${lastError}"
+The previous python script you wrote failed with this error: "${lastError}"
 ${columnInfo}
-Original Request: "${userMessage}"
-
+Original Request: "${userMessage}". 
 Please analyze the error and RE-WRITE the script to fix it.
-Don't be lazy.
       `;
     }
   }
@@ -236,8 +234,7 @@ Don't be lazy.
 }
 
 // --- 4. MODEL ADAPTER (Cloud vs Local) ---
-
-async function callLLM(prompt: string, useLocal: boolean = false): Promise<string> {
+async function callModel(prompt: string, useLocal: boolean = false): Promise<string> {
   if (useLocal) {
     console.log("🧠 Using Local SLM...");
     return await callLocalSLM(prompt);
@@ -245,7 +242,8 @@ async function callLLM(prompt: string, useLocal: boolean = false): Promise<strin
     try {
       // call the Next.js API Route using Axios
       const response = await axios.post('/api/chat', {
-        prompt: prompt
+        prompt: prompt,
+        provider: useSettingsStore.getState().activeLLM || "groq"
       });
       
       // Axios automatically throws on 4xx/5xx errors, 

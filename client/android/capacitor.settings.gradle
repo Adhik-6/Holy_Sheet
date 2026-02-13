@@ -13,3 +13,6 @@ project(':capacitor-network').projectDir = new File('../node_modules/.pnpm/@capa
 
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../node_modules/.pnpm/@capacitor+status-bar@8.0.0_@capacitor+core@8.0.1/node_modules/@capacitor/status-bar/android')
+
+include ':llama-capacitor'
+project(':llama-capacitor').projectDir = new File('../llama-capacitor/android')

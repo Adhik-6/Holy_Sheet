@@ -1,47 +1,47 @@
-import { Wllama } from '@wllama/wllama';
-import { QWEN_MODEL_URL } from './constants'; 
+// lib/modelLoader.ts
+import NativeLlama from './nativeLlama';
+import { getModelPath, checkNativeModelExists } from './nativeModelManager';
 
-const REMOTE_MODEL_URL = QWEN_MODEL_URL;
+const NTHREADS = 4; // Adjust based on device capabilities
+const NCTX = 2048;   // Context size for the model
 
-// 1. THE SINGLETON STORAGE
-// This variable lives in memory as long as the app is running
-let activeWllamaInstance: Wllama | null = null;
+// Tracks if the C++ engine has the model loaded in RAM
+let isNativeModelLoaded = false;
 
-export async function loadModelForChat(
-  onProgress?: (progress: number) => void
-): Promise<Wllama> {
-  // Return existing instance if available (Fast Path)
-  if (activeWllamaInstance) return activeWllamaInstance;
+export async function loadModelForChat(onProgress?: (progress: number) => void) {
+  // 1. Fast exit if already loaded
+  if (isNativeModelLoaded) {
+    console.log("⚡ Native model already loaded.");
+    onProgress?.(100);
+    return;
+  }
 
-  console.log("⚙️ Configuring Wllama...");
-  const wllama = new Wllama({
-    'single-thread/wllama.wasm': '/wllama/single-thread/wllama.wasm',
-    'multi-thread/wllama.wasm': '/wllama/multi-thread/wllama.wasm',
+  console.log("⚙️ Initializing Native Engine...");
+  onProgress?.(10);
+
+  // 2. Check File
+  const exists = await checkNativeModelExists();
+  if (!exists) throw new Error("MODEL_NOT_DOWNLOADED");
+
+  // 3. Get Path
+  const modelPath = await getModelPath();
+  onProgress?.(30);
+
+  // 4. Load (Blocking Call)
+  // We fake some progress steps because the native call blocks JS
+  setTimeout(() => onProgress?.(50), 100);
+  console.log(`🚀 Loading model into Native Engine with: nThreads-${NTHREADS}, nCtx-${NCTX}`);
+  await NativeLlama.loadModel({
+    modelPath: modelPath,
+    nThreads: NTHREADS,   // 🔥 Using 4 cores
+    nCtx: NCTX,         // 🧠 Context size of 512
   });
 
-  const cacheSize = await wllama.cacheManager.getSize(REMOTE_MODEL_URL);
-  if (cacheSize === 0) throw new Error("MODEL_NOT_DOWNLOADED");
-
-  console.log("🚀 Loading model into RAM...");
-  await wllama.loadModelFromUrl(REMOTE_MODEL_URL, {
-    n_ctx: 2048,
-    n_threads: 4,
-    progressCallback: ({ loaded, total }) => {
-      if (onProgress) onProgress(Math.round((loaded / total) * 100));
-    }
-  });
-
-  // 2. SAVE TO SINGLETON
-  console.log("✅ Model Ready & Saved to Singleton");
-  activeWllamaInstance = wllama;
-  
-  return wllama;
+  isNativeModelLoaded = true;
+  onProgress?.(100);
+  console.log("✅ Native Model Ready");
 }
 
-// 3. THE GETTER (For aiService.ts)
-export function getRunningWllama(): Wllama {
-  if (!activeWllamaInstance) {
-    throw new Error("Local Model is not loaded. Please wait for initialization.");
-  }
-  return activeWllamaInstance;
+export function isModelLoaded() {
+  return isNativeModelLoaded;
 }

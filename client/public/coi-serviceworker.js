@@ -53,39 +53,63 @@ if (typeof window === 'undefined') {
         .catch((e) => console.error(e))
     );
   });
+// } else {
+//   (() => {
+//     const reloadedBySelf = window.sessionStorage.getItem("coiReloadedBySelf");
+//     window.sessionStorage.removeItem("coiReloadedBySelf");
+//     const coepNew = window.sessionStorage.getItem("coiCoepCredentialless");
+//     window.sessionStorage.removeItem("coiCoepCredentialless");
+
+//     const coepCredentialless = (coepNew === "true");
+
+//     if (window.navigator.serviceWorker && window.location.hostname !== 'localhost') {
+//         // Skip for localhost to avoid reload loops in some dev environments
+//         // BUT for Capacitor on 192.168.x.x, we usually NEED this.
+//     }
+
+//     if (window.navigator.serviceWorker) {
+//         window.navigator.serviceWorker.register(window.document.currentScript.src).then(
+//         (registration) => {
+//             console.log("COI Service Worker registered");
+
+//             registration.addEventListener("updatefound", () => {
+//             console.log("Reloading because COI Service Worker updated");
+//             window.location.reload();
+//             });
+
+//             if (registration.active && !window.navigator.serviceWorker.controller) {
+//             console.log("Reloading because COI Service Worker active");
+//             window.location.reload();
+//             }
+//         },
+//         (err) => {
+//             console.error("COI Service Worker failed to register: ", err);
+//         }
+//         );
+//     }
+//   })();
+// }
+// ---------------
 } else {
   (() => {
-    const reloadedBySelf = window.sessionStorage.getItem("coiReloadedBySelf");
-    window.sessionStorage.removeItem("coiReloadedBySelf");
-    const coepNew = window.sessionStorage.getItem("coiCoepCredentialless");
-    window.sessionStorage.removeItem("coiCoepCredentialless");
-
-    const coepCredentialless = (coepNew === "true");
-
-    if (window.navigator.serviceWorker && window.location.hostname !== 'localhost') {
-        // Skip for localhost to avoid reload loops in some dev environments
-        // BUT for Capacitor on 192.168.x.x, we usually NEED this.
-    }
-
+    // ⚡ AGGRESSIVE RELOAD LOGIC
     if (window.navigator.serviceWorker) {
-        window.navigator.serviceWorker.register(window.document.currentScript.src).then(
-        (registration) => {
-            console.log("COI Service Worker registered");
+      window.navigator.serviceWorker.register(window.document.currentScript.src)
+        .then((registration) => {
+            console.log("✅ COI Registered");
 
-            registration.addEventListener("updatefound", () => {
-            console.log("Reloading because COI Service Worker updated");
-            window.location.reload();
-            });
-
+            // If the SW is active but not controlling the page, RELOAD.
             if (registration.active && !window.navigator.serviceWorker.controller) {
-            console.log("Reloading because COI Service Worker active");
-            window.location.reload();
+                console.log("🔄 COI: Reloading to activate headers...");
+                window.location.reload();
             }
-        },
-        (err) => {
-            console.error("COI Service Worker failed to register: ", err);
-        }
-        );
+        });
+
+      // Also listen for controller change (activates on first load)
+      window.navigator.serviceWorker.addEventListener("controllerchange", () => {
+         console.log("🔄 COI: Controller changed, reloading...");
+         window.location.reload();
+      });
     }
   })();
 }

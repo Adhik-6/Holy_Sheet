@@ -99,3 +99,29 @@ app/src/main/assets/public
 app/src/main/assets/capacitor.config.json
 app/src/main/assets/capacitor.plugins.json
 app/src/main/res/xml/config.xml
+
+# --- Android Studio & Gradle ---
+.gradle
+/build/
+!/app/build.gradle
+local.properties
+.idea/
+*.iml
+.navigation/
+captures/
+
+# --- Native C++ Build Artifacts (CRITICAL FOR YOUR APP) ---
+.externalNativeBuild/
+.cxx/
+*.o
+*.so
+
+# --- Build Outputs ---
+*.apk
+*.ap_
+*.aab
+
+# --- Keystores (SECURITY) ---
+*.jks
+*.keystore
+release-key.jks

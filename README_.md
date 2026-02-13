@@ -48,6 +48,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 - [ ] Address the security issues related to `.env` varible exposure in frontend.
 - [ ] Change logo and name.
 - [ ] Modify next.config.ts according to building APK (also for capacitor.config.json)
+- [ ] Update the filename and download URL for the SLM model in `models/page.tsx` (also make sure it matches the filename in the C++ code for loading the model), also in `lib/constants.ts`.
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.
@@ -359,4 +360,45 @@ npx cap open android # opens android studio
 ```
 - To inscpect the logs go to: `chrome://inspect/#devices`
 
+## Resetting the android Studio:
+1. "Sync Project with Gradle Files" (Elephant icon in the header)
+2. "Clean Project" (In the "Build" menu)
+3. Click on the "Play" button to run the app again.
+
+## Building APK
+```bash
+pnpm build
+npx cap sync
+npx cap open android
+```
+- In Android Studio, go to Build > Generate Signed Bundle / APK > APK.
+- Follow the prompts to create a new keystore (or use an existing one) and set the key alias and passwords. DON'T click on "Next" button to finish.
+- Click on "Build Variant" and select "release" to ensure you're building the release version of the APK.
+
+
+## Summary of the Strategy
+1. Dev Mode (pnpm dev):
+- Action: Comment out output: 'export' in next.config.mjs.
+- Action: Keep the async headers() block in next.config.mjs.
+- Result: The Next.js dev server sends the correct headers. window.crossOriginIsolated will be true. You don't need the service worker here, but it won't hurt.
+
+2. APK Mode (The Build):
+- Action: Un-comment output: 'export'.
+- Action: The coi-serviceworker.js will kick in. Since static files don't have headers, the Service Worker will reload the page once and inject them.
+- Result: window.crossOriginIsolated becomes true (after a quick page reload on first launch).
+
+## clean up
+You can tell the Chrome/WebView engine on your phone to ignore the security requirement for your specific dev URL.
+1. Open Chrome on your Android Phone.
+2. Type chrome://flags in the address bar.
+3. Search for "Experimental JavaScript SharedArrayBuffer".
+4. Set it to Enabled.
+5. Search for "Insecure origins treated as secure".
+6. Enter your dev URL: http://localhost:3000 (or your IP if not using adb reverse).
+7. Relaunch Chrome.
+*Note:* Since Capacitor uses the "System WebView," this flag in Chrome sometimes carries over. If it doesn't, you may need to enable "Developer Options" in the WebView itself (this varies by Android version).
+
+## APK is found in
+- You can find it here: `[Your Project Folder]/android/app/release/app-release.apk`
+- (Or sometimes:) `[Your Project Folder]/android/app/build/outputs/apk/release/app-release.apk`
 ## last

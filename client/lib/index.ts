@@ -1,6 +1,7 @@
+// lib/index.ts
 import { getPyodide, processAgentRequest } from "./aiService";
 import { formatContextForPrompt, buildFileContext } from "./contextBuilder";
-import { loadModelForChat, getRunningWllama } from "./modelLoader";
+import { loadModelForChat } from "./modelLoader"; // Updated import
 
 import { callGemini, callGroq, callCustomEndpoint, callOpenAI, getLLMResponse, callLocalSLM } from "./llm";
 
@@ -11,5 +12,6 @@ export {
     formatContextForPrompt, buildFileContext,
     callGemini, callGroq, callCustomEndpoint, callOpenAI, getLLMResponse, callLocalSLM,
     cn,
-    loadModelForChat, getRunningWllama
+    loadModelForChat, 
+    // getRunningWllama ❌ REMOVED
 };

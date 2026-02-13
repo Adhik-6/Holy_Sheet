@@ -2,4 +2,7 @@ include ':app'
 include ':capacitor-cordova-android-plugins'
 project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
 
+include ':llama-capacitor'
+project(':llama-capacitor').projectDir = new File('../llama-capacitor/android')
+
 apply from: 'capacitor.settings.gradle'
