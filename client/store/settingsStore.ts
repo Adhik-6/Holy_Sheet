@@ -20,7 +20,7 @@ export const useSettingsStore = create<AppState>()(
     (set) => ({
       // Initial Default Values
       mode: 'auto',
-      activeLLM: 'gpt-4o', 
+      activeLLM: 'groq', 
       activeSLM: 'llama-3-8b-quantized',
 
       // Actions
