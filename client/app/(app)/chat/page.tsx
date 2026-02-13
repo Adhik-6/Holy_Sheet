@@ -23,7 +23,8 @@ let fileData: ArrayBuffer | undefined;
 
 export default function ChatPage() {
   // --- STATE ---
-  const [messages, setMessages] = useState<Message[]>(msgs as Message[]);
+  // const [messages, setMessages] = useState<Message[]>(msgs as Message[]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeFileContext, setActiveFileContext] = useState<FileContext | null>(null);

@@ -100,7 +100,7 @@ const Hero = () => {
         </motion.div>
 
         {/* Demo Window */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
@@ -154,7 +154,7 @@ const Hero = () => {
               </div>
             </div>
           </Card>
-        </motion.div>
+        </motion.div> */}
       </div>
     </section>
   );

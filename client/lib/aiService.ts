@@ -240,8 +240,11 @@ async function callModel(prompt: string, useLocal: boolean = false): Promise<str
     return await callLocalSLM(prompt);
   } else {
     try {
+      let BackendUrl = process.env.NODE_ENV === "production"
+        ? process.env.BACKEND_URL_PROD
+        : "";
       // call the Next.js API Route using Axios
-      const response = await axios.post('/api/chat', {
+      const response = await axios.post(`${BackendUrl}/api/chat`, {
         prompt: prompt,
         provider: useSettingsStore.getState().activeLLM || "groq"
       });

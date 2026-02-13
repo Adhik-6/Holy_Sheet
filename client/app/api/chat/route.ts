@@ -16,8 +16,8 @@ export async function POST(request: Request) {
     // Priority: 
     //   1. Value sent from Frontend (user choice)
     //   2. Value in .env.local (default setting)
-    //   3. Fallback to 'gemini'
-    const selectedProvider = (provider || process.env.DEFAULT_LLM_PROVIDER || 'gemini') as LLMProvider;
+    //   3. Fallback to 'groq'
+    const selectedProvider = (provider || process.env.DEFAULT_LLM_PROVIDER || 'groq') as LLMProvider;
 
     console.log(`Using LLM Provider: ${selectedProvider}`);
 
