@@ -1,6 +1,7 @@
 package com.chiggazz.holy_sheets;
 
 import android.os.Bundle;
+import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 // Standard Plugins
@@ -24,5 +25,6 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(LlamaPlugin.class);
 
         super.onCreate(savedInstanceState);
+        WebView.setWebContentsDebuggingEnabled(true);
     }
 }

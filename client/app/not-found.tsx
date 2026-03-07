@@ -101,9 +101,9 @@ export default function NotFound() {
       </motion.div>
 
       {/* Footer Text */}
-      <div className="absolute bottom-10 text-[10px] uppercase tracking-[0.2em] font-mono text-[color-mix(in_srgb,var(--muted-foreground),transparent_60%)]">
+      {/* <div className="absolute bottom-10 text-[10px] uppercase tracking-[0.2em] font-mono text-[color-mix(in_srgb,var(--muted-foreground),transparent_60%)]">
         Error: ID_NULL_REFERENCE
-      </div>
+      </div> */}
     </div>
   );
 }

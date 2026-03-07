@@ -1,12 +1,23 @@
 import { registerPlugin } from '@capacitor/core';
 
 export interface LlamaPlugin {
-  loadModel(options: { modelPath: string; nThreads?: number; nCtx?: number }): Promise<void>;
-  generate(options: { prompt: string; nPredict?: number; temperature?: number }): Promise<{ text: string }>;
+  loadModel(options: { 
+    modelPath: string; 
+    nThreads?: number; 
+    nCtx?: number;
+    useMmap?: boolean;     // 🔥 Added
+    nGpuLayers?: number;   // 🔥 Added
+  }): Promise<void>;
+
+  generate(options: { 
+    prompt: string; 
+    nPredict?: number; 
+    temperature?: number;
+    stop?: string;         // 🔥 Added (Passing a single string is easier for C++)
+  }): Promise<{ text: string }>;
+  
   unload(): Promise<void>;
-  // 👇 Add this definition
   downloadModel(options: { url: string; filename: string }): Promise<void>;
-  // 👇 Add listener definition
   addListener(eventName: 'downloadProgress', listenerFunc: (info: { progress: number }) => void): Promise<any>;
 }
 

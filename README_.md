@@ -7,7 +7,7 @@
 2. Create a data visualization as asked (more like a B2B dashboard generator) (MVP)
 3. An offline mode that uses SLM to answer simple queries (MVP)
 4. Graceful degradation (MVP)
-5. Generate a new Excel sheet (from single / multiple excel files / sheets) (MVP / Post MVP)
+5. Generate a new Excel sheet (from single/multiple excel files/sheets) (MVP/Post MVP)
 6. The AI must be able to answer follow-up questions (MVP / Post MVP)
 7. Add an LLM Evaluation feature (show reasonings, confidence meter) (Post MVP)
 8. Model capability (Post MVP)
@@ -50,6 +50,15 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 - [ ] Modify next.config.ts according to building APK (also for capacitor.config.json)
 - [ ] Update the filename and download URL for the SLM model in `models/page.tsx` (also make sure it matches the filename in the C++ code for loading the model), also in `lib/constants.ts`.
 - [ ] Remove unnecessary lines from capacitor.config.ts for production build.
+- [ ] Give a "Coming Soon" toast to unimplemented features when user tries to access them (like unimplemeted links).
+- [ ] Changing metadata `android/app/src/main/res/values/strings.xml`.
+- [ ] update model info in model manager page.
+- [ ] Implemet PII Scrubber if possible.
+- [ ] Tool-first prompting with hybrid approach:
+    - total / average / top → tools
+    - complex analysis → code 
+- [ ] change SYSTEM_PROMPT & SLM_SYSTEM_PROMPT according to the `\client\app\(app)\chat\types.ts`
+- [ ] The jey store creds are present in `D:\holy_sheet\client\android\app\build.gradle` - remove it.
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.
@@ -375,7 +384,44 @@ npx cap open android
 - In Android Studio, go to Build > Generate Signed Bundle / APK > APK.
 - Follow the prompts to create a new keystore (or use an existing one) and set the key alias and passwords. DON'T click on "Next" button to finish.
 - Click on "Build Variant" and select "release" to ensure you're building the release version of the APK.
+### For updating the APK:
+1. Run till `npx cap open android`.
+2. Increment version number in `android/app/build.gradle` - `versionCode` and `versionName`. Then sync the gradle files.
+3. Go to Build > Generate Signed Bundle / APK > APK and click next.
+4. In that, select existing keystore and provide the path, alias and passwords. Then click on "Next" and select "release".
+  - Get **Keystore password**, **Key alias**, and **Key password** from the `.env.local`.
 
+### Updating APK after changing web code:
+1. Bundle the Frontend
+Run this in your terminal to compile your new prompt and copy it over to the Android folder:
+```Bash
+pnpm build
+npx cap sync
+```
+
+2. Bump the Version (Crucial for the 2GB Model)
+To ensure your phone treats this as an update and doesn't wipe your downloaded SLM, you must increment the version.
+Open `android/app/build.gradle`.
+Find versionCode and bump it up by 1 (e.g., from 3 to 4).
+Click Sync Now.
+
+3. Generate the APK
+In Android Studio, go to Build > Generate Signed Bundle / APK... > APK.
+Your keystore path, alias, and passwords should already be saved from last time. Just click Next, select release, and hit Create.
+
+4. Install Safely
+Once it finishes, open your terminal and push the update directly to your phone (which is still plugged in) using the replace flag:
+```Bash
+adb install -r ./app/release/app-release.apk
+```
+
+## Setting App icon:
+1. Create your app icon (preferably a 1024x1024 PNG).
+2. In Android Studio, locate the `res` directory under `android/app/src/main/res` and right-click, new > Image Asset.
+3. Keep the Icon Type as "Launcher Icons (Adaptive and Legacy)", select "Image" as the Asset Type, and select the icon you created. 
+4. use the "Scaling" slider right below the path to make sure your icon fits nicely inside the "Safe Zone" circle.
+5. Optionally set background color to transparent or any color you want in the "Background Layer" tab.
+6. Click Next. Android Studio will show you a preview of all the files it is about to overwrite. Click Finish.
 
 ## Summary of the Strategy
 1. Dev Mode (pnpm dev):
@@ -398,8 +444,68 @@ You can tell the Chrome/WebView engine on your phone to ignore the security requ
 6. Enter your dev URL: http://localhost:3000 (or your IP if not using adb reverse).
 7. Relaunch Chrome.
 *Note:* Since Capacitor uses the "System WebView," this flag in Chrome sometimes carries over. If it doesn't, you may need to enable "Developer Options" in the WebView itself (this varies by Android version).
+8. Remove `import android.webkit.WebView;` & `WebView.setWebContentsDebuggingEnabled(true);` from `android/app/src/main/java/com/chiggazz/holy_sheets/MainActivity.java` after this.
+9. Fixing `C:\Users\adhik\bin` 
+  - Let Android Studio successfully compile the Vulkan C++ shaders using the official Microsoft build tools.
+  - Rename it back to bin immediately after the APK finishes generating. By renaming it back, whatever old application relied on that GCC compiler will continue working exactly as it did before. You just need it out of the way for this one specific compilation step.
 
 ## APK is found in
-- You can find it here: `[Your Project Folder]/android/app/release/app-release.apk`
+- You can find it here: `[Your Project Folder]/android/app/release/app-release.apk` _/
 - (Or sometimes:) `[Your Project Folder]/android/app/build/outputs/apk/release/app-release.apk`
+
+## Next Steps:
+1. Folllow up with gemini's latest response on how to control the intelligence & speed. check if the follow up questions are working properly with SLM.
+2. Depending on the previous step's result, Switch to qwen-coder-3b-q4 and test it again.
+3. Once SLM is working properly, start building other pages. Also Authentication.
+
+## Speed & Performance attributes:
+1. Model Parameters
+2. Quantization Type
+3. Temperature
+4. nPredict
+5. nThreads
+6. nCTX
+7. nBatch
+8. Hardware acceleration
+9. Flash Attention
+10. Sampling Parameters (top_k and top_p)
+11. KV Cache Quantization
+12. Stop flag: `stop: "<|im_end|>"`
+Search if any other exists.
+
+### gemini's response on flash attention and nBatch:
+**Do this in future**
+1. The Missing nBatch and flashAttn
+You caught me keeping the training wheels on! I intentionally left them out of the nativeLlama.ts and the JNI bridge for two very specific reasons regarding your C++ code:
+
+Why I left out nBatch:
+If you look closely at the llama-jni.cpp code you provided earlier, your generation loop has this line hardcoded into it:
+int n_batch = 128;
+Your C++ for loop is explicitly doing its math based on chunks of 128 tokens. If I added nBatch to the TypeScript interface and passed 512 down to C++, we would have had to rewrite your C++ chunking logic. I wanted to guarantee your app compiled and didn't crash before we started messing with the C++ memory loop!
+
+Why I left out flashAttn:
+In recent versions of llama.cpp, Flash Attention is enabled by setting a boolean inside the context parameters (ctx_params.flash_attn = true;). However, depending on the exact week your llama.cpp repository was cloned, this parameter might not exist in the struct, which would cause a fatal C++ compile error. I prioritized getting your GPU and mmap working first, as those provide the biggest speed boosts.
+
+If you want to wire them up now that you understand the flow, you absolutely can! Just add them to nativeLlama.ts, grab them in LlamaPlugin.java, and update your C++ struct and loop.
+
+## How to correctly rebuild the C++ Plugin
+Because you changed CMakeLists.txt, a standard JavaScript refresh (npx cap sync) will not compile the new C++ rules. You must force Android Studio to wipe its native cache and recompile the Vulkan libraries.
+
+1. Open your terminal at the root of your project:
+```Bash
+pnpm build
+npx cap sync
+```
+
+2. Open Android Studio.
+3. In the top menu bar, click `Build > Clean Project`. Wait for the process at the bottom to finish.
+4. In the top menu bar, click `Build > Rebuild Project`. (This step will take longer than usual because it is compiling the C++ Vulkan dependencies from scratch).
+5. Generate your Signed APK and install it on your device.
+   
+## Compiling C++ code
+1. Search "x64 Native Tools Command Prompt" in the start menu and open it.
+2. Wait for the command prompt to initialize and the run `"C:\Program Files\Android\Android Studio\bin\studio64.exe"`
+3. Delete the `.cxx` folder in `holy_sheet\client\llama-capacitor\android\` to clear the C++ cache.
+4. In Android Studio, go to `build > clean project`, then rebuild project. This will force the C++ code to recompile with the new changes.
+
 ## last

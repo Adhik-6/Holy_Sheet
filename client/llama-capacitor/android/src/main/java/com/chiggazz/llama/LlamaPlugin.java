@@ -23,8 +23,8 @@ public class LlamaPlugin extends Plugin {
     }
 
     // Native Methods (C++)
-    private native long llamaInit(String modelPath, int nThreads, int nCtx);
-    private native String llamaGenerate(long contextPtr, String prompt, int nPredict, float temperature);
+    private native long llamaInit(String modelPath, int nThreads, int nCtx, boolean useMmap, int nGpuLayers);
+    private native String llamaGenerate(long contextPtr, String prompt, int nPredict, float temperature, String stopToken);
     private native void llamaFree(long contextPtr);
 
     // Executor for background tasks
@@ -34,8 +34,11 @@ public class LlamaPlugin extends Plugin {
     @PluginMethod
     public void loadModel(PluginCall call) {
         String modelPath = call.getString("modelPath");
-        Integer nThreads = call.getInt("nThreads", 8);
+        Integer nThreads = call.getInt("nThreads", 4);
         Integer nCtx = call.getInt("nCtx", 2048);
+        // 🔥 2. GRAB HARDWARE PARAMS
+        Boolean useMmap = call.getBoolean("useMmap", true);
+        Integer nGpuLayers = call.getInt("nGpuLayers", 0);
 
         if (modelPath == null) {
             call.reject("modelPath required");
@@ -56,7 +59,7 @@ public class LlamaPlugin extends Plugin {
                     return;
                 }
 
-                long ptr = llamaInit(file.getAbsolutePath(), nThreads, nCtx);
+                long ptr = llamaInit(file.getAbsolutePath(), nThreads, nCtx, useMmap, nGpuLayers);
 
                 if (ptr == 0) {
                     call.reject("Failed to initialize llama context");
@@ -79,7 +82,9 @@ public class LlamaPlugin extends Plugin {
 
         String prompt = call.getString("prompt");
         Integer nPredict = call.getInt("nPredict", 512);
-        Float temperature = call.getFloat("temperature", 0.2f);
+        Float temperature = call.getFloat("temperature", 0.1f);
+        // 🔥 4. GRAB STOP TOKEN
+        String stopToken = call.getString("stop", ""); 
 
         if (prompt == null) {
             call.reject("prompt required");
@@ -88,7 +93,7 @@ public class LlamaPlugin extends Plugin {
 
         executor.execute(() -> {
             try {
-                String result = llamaGenerate(contextPtr, prompt, nPredict, temperature);
+                String result = llamaGenerate(contextPtr, prompt, nPredict, temperature, stopToken);
                 JSObject ret = new JSObject();
                 ret.put("text", result);
                 call.resolve(ret);

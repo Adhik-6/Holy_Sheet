@@ -114,30 +114,60 @@ print(json.dumps({
 }, default=str))
 `;
 
-const SLM_SYSTEM_PROMPT = `
-You are a Python Data Analyst in Pyodide.
-Dataframe 'df' is loaded.
+// Original
+// const SLM_SYSTEM_PROMPT = `You are a Python Analyst. DataFrame 'df' is loaded.
+// RULES:
+// 1. USE EXACT COLUMNS ONLY.
+// 2. CLEAN NANS: df = df.where(pd.notnull(df), None)
+// 3. OUTPUT ONLY valid Python code. NO plain text explanations.
+// 4. LAST LINE MUST BE: print(json.dumps(payload, default=str))
+// 5. NO HALLUCINATION: If a requested metric requires columns that do not exist, use the 'markdown' schema to explain what is missing.
 
+// STRICT JSON SCHEMAS (Choose ONE):
+
+// 1. ERROR/MISSING DATA: 
+// {"type": "markdown", "summary": "Cannot calculate Profit. Missing columns."}
+
+// 2. KPI (Must have 'data' array):
+// {"type": "kpi", "summary": "...", "data": [{"label": "...", "value": 123}]}
+
+// 3. TABLE ('rows' must be list of lists):
+// {"type": "table", "summary": "...", "data": {"headers": ["Col1"], "rows": [["Val1"]]}}
+
+// 4. CHART:
+// {"type": "chart", "summary": "...", "data": {"config": {"type": "bar|line|pie", "title": "...", "xAxisKey": "X", "series": [{"dataKey": "Y", "label": "..."}]}, "data": [{"X": "a", "Y": 1}]}}
+
+// EXAMPLE (Table):
+// top = df.nlargest(5, 'Sales')[['Date', 'Sales']]
+// top = top.where(pd.notnull(top), None)
+// print(json.dumps({
+//   "type": "table",
+//   "summary": "Top 5 Sales",
+//   "data": { "headers": top.columns.tolist(), "rows": top.values.tolist() }
+// }, default=str))`;
+
+const SLM_SYSTEM_PROMPT = `You are a Python Analyst. DataFrame 'df' is loaded.
 RULES:
-1. USE EXACT COLUMN NAMES.
+1. USE EXACT COLUMNS ONLY.
 2. CLEAN NANS: df = df.where(pd.notnull(df), None)
-3. OUTPUT: Raw Python code. Last line: print(json.dumps(output_payload, default=str))
-4. NO MARKDOWN.
+3. OUTPUT ONLY valid Python code. NO plain text explanations.
+4. LAST LINE MUST BE: print(json.dumps(payload, default=str))
+5. NO HALLUCINATION: If a requested metric requires columns that do not exist, use the 'markdown' schema to explain what is missing.
+6. Don't be LAZY
 
-OUTPUT SCHEMA:
-type Output = 
-  | { type: 'chart'; ... }
-  | { type: 'table'; data: { headers: string[], rows: any[][] } }
-  | { type: 'kpi'; ... }
+STRICT JSON SCHEMAS (Choose ONE):
 
-EXAMPLE (Table):
-top = df.nlargest(5, 'Sales')[['Date', 'Sales']]
-top = top.where(pd.notnull(top), None)
-print(json.dumps({
-  "type": "table",
-  "summary": "Top 5 Sales",
-  "data": { "headers": top.columns.tolist(), "rows": top.values.tolist() }
-}, default=str))
+1. SUMMARY/ERROR (Markdown): 
+{"type": "markdown", "summary": "Cannot calculate Profit. Missing columns."}
+
+2. KPI (Must have 'data' array):
+{"type": "kpi", "summary": "...", "data": [{"label": "...", "value": 123}]}
+
+3. TABLE ('rows' must be list of lists):
+{"type": "table", "summary": "...", "data": {"headers": ["Col1"], "rows": [["Val1"]]}}
+
+4. CHART:
+{"type": "chart", "summary": "...", "data": {"config": {"type": "bar|line|pie", "title": "...", "xAxisKey": "X", "series": [{"dataKey": "Y", "label": "..."}]}, "data": [{"X": "a", "Y": 1}]}}
 `;
 
 // --- 2. Gemini IMPLEMENTATION ---
@@ -217,8 +247,6 @@ export async function callCustomEndpoint(prompt: string): Promise<string> {
 }
 
 export async function callLocalSLM(prompt: string): Promise<string> {
-  
-  // Auto-recovery: If UI didn't load it, load it now.
   if (!isModelLoaded()) {
     console.warn("⚠️ Model was not loaded. Loading now...");
     await loadModelForChat();
@@ -234,15 +262,21 @@ ${prompt}
 <|im_start|>assistant
 `;
 
-  printPrompt(fullPrompt);
+  printPrompt(fullPrompt, 1);
   console.log("🚀 Starting NATIVE Engine...");
 
   try {
     const result = await NativeLlama.generate({
-      prompt: "Q: Say hello.\nA:",   // pass fullPrompt here
+      prompt: fullPrompt,
+      nPredict: 256,
+      
+      // 🔥 NEW SAMPLING & STOP PARAMS
       temperature: 0.1,
-      nPredict: 256
+      // top_k: 10,
+      // top_p: 0.1,
+      stop: "<|im_end|>" // Tell the C++ engine to cut the connection here
     });
+    
     console.log("✅ Native Inference Completed");
     return result.text;
   } catch (e: any) {
@@ -268,10 +302,12 @@ export async function getLLMResponse(provider: LLMProvider, prompt: string): Pro
   }
 }
 
-function printPrompt(prompt: string) {
-  console.log("----- LLM SYSTEM PROMPT START -----");
-  console.log(SYSTEM_PROMPT);
-  console.log("----- LLM SYSTEM PROMPT END -----");
+function printPrompt(prompt: string, isSLM: number = 0) {
+  if(isSLM == 0) {
+    console.log("----- LLM SYSTEM PROMPT START -----");
+    console.log(SYSTEM_PROMPT);
+    console.log("----- LLM SYSTEM PROMPT END -----");
+  }
   console.log("----- LLM PROMPT START -----");
   console.log(prompt);
   console.log("----- LLM PROMPT END -----");
