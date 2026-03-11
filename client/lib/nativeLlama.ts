@@ -5,16 +5,19 @@ export interface LlamaPlugin {
     modelPath: string; 
     nThreads?: number; 
     nCtx?: number;
-    useMmap?: boolean;     // 🔥 Added
-    nGpuLayers?: number;   // 🔥 Added
+    useMmap?: boolean;     
+    nGpuLayers?: number;   
   }): Promise<void>;
 
   generate(options: { 
     prompt: string; 
     nPredict?: number; 
     temperature?: number;
-    stop?: string;         // 🔥 Added (Passing a single string is easier for C++)
+    stop?: string;         
   }): Promise<{ text: string }>;
+  
+  // 🔥 Exposes the C++ Kill Switch to the frontend
+  stop(): Promise<void>; 
   
   unload(): Promise<void>;
   downloadModel(options: { url: string; filename: string }): Promise<void>;

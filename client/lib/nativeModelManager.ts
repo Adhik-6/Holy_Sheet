@@ -1,33 +1,35 @@
+// lib/nativeModelManager.ts
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
-import { QWEN_FILENAME, QWEN_MODEL_URL } from './constants';
 import NativeLlama from './nativeLlama'; // ✅ Import your Native Plugin
 
-export const getModelPath = async () => {
+// 🔥 1. Accept filename dynamically
+export const getModelPath = async (filename: string) => {
   try {
     const uri = await Filesystem.getUri({
       directory: Directory.Data,
-      path: QWEN_FILENAME,
+      path: filename,
     });
     // Convert "file:///data/..." to "/data/..."
     return uri.uri.replace("file://", "");
   } catch (e) {
     console.error("❌ Failed to get URI:", e);
     // Fallback: Manually construct the path if Filesystem fails (Standard Android path)
-    return `/data/user/0/com.chiggazz.holy_sheets/files/${QWEN_FILENAME}`;
+    return `/data/user/0/com.chiggazz.holy_sheets/files/${filename}`;
   }
 };
 
-export const checkNativeModelExists = async () => {
+// 🔥 2. Accept filename dynamically
+export const checkNativeModelExists = async (filename: string) => {
   if (!Capacitor.isNativePlatform()) return false;
 
   try {
     // 🔍 DEBUG LOG: See exactly what we are looking for
-    console.log(`🔍 Checking existence of: ${QWEN_FILENAME} in Directory.Data`);
+    console.log(`🔍 Checking existence of: ${filename} in Directory.Data`);
     
     const stat = await Filesystem.stat({
       directory: Directory.Data,
-      path: QWEN_FILENAME,
+      path: filename,
     });
     
     console.log(`✅ File found! Size: ${stat.size} bytes. Path: ${stat.uri}`);
@@ -39,10 +41,10 @@ export const checkNativeModelExists = async () => {
   }
 };
 
-// ✅ UPDATED: Use the Native Plugin to download (Prevents OOM Crashes)
-export const downloadNativeModel = async (onProgress: (progress: number) => void) => {
+// 🔥 3. Accept BOTH url and filename dynamically
+export const downloadNativeModel = async (url: string, filename: string, onProgress: (progress: number) => void) => {
   try {
-    console.log("⬇️ Starting Native Download via Manager...");
+    console.log(`⬇️ Starting Native Download via Manager for ${filename}...`);
     
     // 1. Setup Listener
     const listener = await NativeLlama.addListener('downloadProgress', (info: any) => {
@@ -51,8 +53,8 @@ export const downloadNativeModel = async (onProgress: (progress: number) => void
 
     // 2. Start Download
     await NativeLlama.downloadModel({
-      url: QWEN_MODEL_URL,
-      filename: QWEN_FILENAME
+      url: url,
+      filename: filename
     });
 
     // 3. Cleanup

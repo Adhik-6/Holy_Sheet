@@ -19,17 +19,16 @@ import {
   TooltipTrigger 
 } from "@/components/ui/tooltip";
 
-// 1. IMPORT STORE & HOOKS
+// 1. IMPORT STORE, HOOKS, & REGISTRY
 import { useSettingsStore, ModelMode } from "@/store/settingsStore";
-import { useNetworkStatus } from "@/hooks/networkStatusHook"; // Ensure this path is correct
+import { useNetworkStatus } from "@/hooks/networkStatusHook"; 
 import { checkNativeModelExists } from '@/lib/nativeModelManager';
+import { getActiveSLMConfig } from '@/lib/modelRegistry'; // 🔥 IMPORT REGISTRY
 
 import { MobileSidebar } from "./MobileSidebar";
 import { ModelDownloadDialog } from "../chat/components/modelDownloadDialog"; 
 
-// NO PROPS NEEDED! The component is now self-contained.
 export const Header = () => {
-  // 2. USE GLOBAL STORE
   const { mode, setMode, activeSLM } = useSettingsStore();
   const isOnline = useNetworkStatus();
 
@@ -44,11 +43,13 @@ export const Header = () => {
     // Native Cache Check
     const checkRealCache = async () => {
        if (isNative) {
-         const exists = await checkNativeModelExists();
+         // 🔥 FIX: Look up the filename from the registry using activeSLM
+         const config = getActiveSLMConfig(activeSLM);
+         const exists = await checkNativeModelExists(config.filename);
+         
          setIsModelReady(exists);
-         console.log(exists ? "✅ Native model found." : "❌ Native model missing.");
+         console.log(exists ? `✅ Native model [${config.name}] found.` : `❌ Native model [${config.name}] missing.`);
        } else {
-         // If on Web, we assume not ready (or implement web-cache check)
          setIsModelReady(false);
        }
     };
@@ -57,16 +58,13 @@ export const Header = () => {
   }, [activeSLM]);
 
   const handleModeChange = (val: string) => {
-    // Prevent switching if disabled (Desktop check)
     if (!isMobileApp && val !== 'llm' && val !== 'auto') return;
 
-    // Intercept SLM selection if model is missing
     if (val === 'slm' && !isModelReady) {
         setShowDownloadDialog(true);
         return; 
     }
     
-    // Update Global Store
     setMode(val as ModelMode);
   };
 
@@ -77,7 +75,6 @@ export const Header = () => {
   };
   const indicator = getActiveIndicator();
   
-  // 🎨 DROPDOWN ITEM COMPONENT (Unchanged logic, just cleanup)
   const RestrictedItem = ({ value, icon: Icon, label, subLabel }: any) => {
     const isDisabled = !isMobileApp && value !== 'llm';
     
@@ -131,7 +128,6 @@ export const Header = () => {
 
       <div className="flex items-center justify-between px-4 sm:px-6 h-16 w-full">
           <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-            {/* Pass isOnline if needed, or let Sidebar use the hook internally too */}
             <MobileSidebar />
             <h2 className="text-muted-foreground text-sm font-medium truncate max-w-[120px] sm:max-w-none">
               <span className="hidden sm:inline">Analysis Session: </span>

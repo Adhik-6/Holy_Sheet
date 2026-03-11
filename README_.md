@@ -59,6 +59,9 @@ const withPWA = require("@ducanh2912/next-pwa").default({
     - complex analysis → code 
 - [ ] change SYSTEM_PROMPT & SLM_SYSTEM_PROMPT according to the `\client\app\(app)\chat\types.ts`
 - [ ] The jey store creds are present in `D:\holy_sheet\client\android\app\build.gradle` - remove it.
+- [ ] Settings must have mmap & gpu toggle for SLM.
+- [ ] Different stop tokens for different SLMs.
+- [ ] slm feedback to users so users don't think the app is frozen when SLM is doing its work.
 
 ## Prompt
 A futuristic, highly immersive SaaS website for an "AI Data Analyst Agent" PWA. It must have a landing page denoting the features it has. The design should feel "alive" and responsive, utilizing fluid motion to guide the user's attention without sacrificing performance.
@@ -459,18 +462,20 @@ You can tell the Chrome/WebView engine on your phone to ignore the security requ
 3. Once SLM is working properly, start building other pages. Also Authentication.
 
 ## Speed & Performance attributes:
-1. Model Parameters
-2. Quantization Type
-3. Temperature
-4. nPredict
-5. nThreads
-6. nCTX
-7. nBatch
-8. Hardware acceleration
-9. Flash Attention
-10. Sampling Parameters (top_k and top_p)
-11. KV Cache Quantization
-12. Stop flag: `stop: "<|im_end|>"`
+1. Model Parameters - 1.5B/3B
+2. Quantization Type - q4_k_m
+3. Temperature - 0.1-0.5 for more deterministic, 0.5-1.0 for more creative.
+4. nPredict - 512 (Recommended)
+5. nThreads - 4 (Recommended for mobile considering the big.LITTLE architecture of ARM CPUs)
+6. nCTX - 2048 (Recommended. Higher context windows can cause OOM crashes, while lower context windows limit the AI's ability to understand complex queries).
+7. nBatch - 256 (Recommended for mobile. Higher batch sizes can cause OOM crashes, while lower batch sizes underutilize the GPU).
+8. Hardware acceleration  - CPU/GPU (Vulkan). Default is CPU. GPU is recommended for high-end mobiles.
+9. Flash Attention - Currently 'auto' (llama.cpp will decide based on hardware). No use if GPU is enabled, as flash attention is only for CPU. 
+10. Sampling Parameters (top_k and top_p) - Only relevant for LLM.
+11. KV Cache Quantization - Currently 'auto' (llama.cpp will decide based on hardware). 
+12. Stop flags - Currently set to EOG token. Stops the model when it predicts the end of generation token. 
+13. Mmap - currently true. This allows the model to load directly into RAM without fully decompressing, which saves time and storage space. However, it can cause issues on some devices, so we may need to add a toggle for this in the future.
+
 Search if any other exists.
 
 ### gemini's response on flash attention and nBatch:
@@ -505,7 +510,87 @@ npx cap sync
 ## Compiling C++ code
 1. Search "x64 Native Tools Command Prompt" in the start menu and open it.
 2. Wait for the command prompt to initialize and the run `"C:\Program Files\Android\Android Studio\bin\studio64.exe"`
-3. Delete the `.cxx` folder in `holy_sheet\client\llama-capacitor\android\` to clear the C++ cache.
+3. Delete the `.cxx` folder in `D:\holy_sheet\client\llama-capacitor\android` to clear the C++ cache.
 4. In Android Studio, go to `build > clean project`, then rebuild project. This will force the C++ code to recompile with the new changes.
+
+## Logcat keywords
+1. LlamaJNI: Filters for every single custom log we wrote in the C++ bridge.
+2. system info: Shows exactly what hardware flags llama.cpp successfully compiled and detected.
+3. llama_kv_cache: Shows exactly how much RAM the context window is eating (Crucial for debugging Out of Memory crashes).
+4. graph splits: The holy grail metric for Vulkan. If this says anything other than 1, the memory is bottlenecking.
+5. llama_decode failed: The primary error thrown when the engine encounters corrupt text or runs out of processing bounds.
+6. EOG token reached: Confirms the AI successfully decided to stop talking on its own, rather than being forcefully cut off.
+7. llama.cpp
+
+## ⚠️ Architecture Note: The "DotProd" Compilation Dilemma
+
+### The Problem:
+Modern ARM CPUs (Snapdragon, Dimensity) support dotprod instructions, which drastically accelerate llama.cpp inference. However, if we globally force the -march=armv8.2-a+dotprod flag in CMakeLists.txt, the Android NDK (Clang) weaves these instructions into the entire .so binary. If an older Android phone (ARMv8.0) attempts to load this binary, the OS detects "Illegal Instructions" and hard-crashes instantly.
+
+### Why llama.cpp's Auto-Detection Fails on Android:
+- llama.cpp has a built-in multi-target system intended to compile specific math files with dotprod attributes while keeping the rest of the binary safe. At runtime, it checks OS hardware capabilities and routes math accordingly.
+- However, the Android NDK Clang cross-compiler strictly enforces the global baseline flag (-march=armv8-a). It actively strips out the dynamic dotprod function attributes during compilation. Because the fast instructions are physically deleted from the compiled .so file, the runtime detector falls back to standard NEON on all devices.
+
+### Our Current Solution (Universal/Safe Baseline):
+We have opted for a Universal build. We use -march=armv8-a globally in CMake.
+- **Pros:** 100% crash-proof across all 64-bit Android devices. No graph-splitting bugs.
+- **Cons:** Leaves ~25% CPU performance on the table for modern phones.
+
+### Future Fix (For Scaling):
+1. Do not attempt to fix this inside CMake. The correct Android engineering solution is to use Gradle Product Flavors.
+2. The future developer should configure build.gradle to generate two distinct APKs:
+  - app-universal (Built with standard flags).
+  - app-fast (Built with forced dotprod flags).
+3. By uploading both to the Google Play Store via an App Bundle, Google's servers will dynamically deliver the dotprod binary only to modern devices, giving us maximum speed without the crash risk.
+
+### Build/Refresh Options:
+1. Deleting `.cxx`: The Nuclear Option. CMake heavily caches its C++ build paths to save time. Deleting this folder forces Android Studio to forget everything and rebuild all 470+ llama.cpp files from absolute scratch. Only do this when you change CMakeLists.txt.
+2. `Build > Clean Project`: The Standard Wipe. This deletes your compiled Java/Kotlin files (.class) and old APKs, but it usually leaves the C++ .cxx cache alone. Do this when your Android Java/Capacitor code is acting glitchy.
+3. Sync Project with Gradle Files: The Librarian. This does not compile any code. It simply tells Android Studio to re-read your build.gradle files, download any missing dependencies, and link everything together in the IDE so you don't get red squiggly error lines.
+4. Generate Signed APK: The Packager. This takes whatever is currently compiled, zips it up with your security keys, and creates the final .apk file that Android OS can actually install.
+5. `pnpm build:mobile` (Next.js): The Web Compiler. This takes your Next.js code and compiles it into static HTML, CSS, and JavaScript, dumping it into an out/ folder.
+6. `npx cap sync`: The Bridge. This copies your newly built Next.js out/ folder into Android Studio's assets/public folder, and updates any native iOS/Android plugins you installed.
+7. `File > Invalidate Caches / Restart`: The Refresh Button. This is a catch-all for weird IDE bugs. It clears Android Studio's internal caches and restarts the whole program. Use this if your IDE is showing weird errors that don't make sense, or if the "Sync Project with Gradle Files" isn't fixing your red squiggly lines.
+8. `npx cap copy`: The Manual Copier. This is a more manual version of `npx cap sync` that only copies web assets without touching native plugins. Use this if you only changed frontend code and want to skip the plugin syncing step or haven't installed any new npm pacakages.
+
+## Benchmarking:
+
+Prompt: `What is the total mark of the student named "Alice"?`
+Data: `D:\holy_sheet\client\not-git\sample_data.xlsx` (6 columns, 193 rows)
+Settings: 
+1. Model Parameters - 3B
+2. Quantization Type - q4_k_m
+3. Temperature - 0.1
+4. nPredict - 512
+5. nThreads - 4
+6. nCTX - 2048
+7. nBatch - 256
+8. Mmap - true
+
+### CPU Vs GPU:
+
+1. Prompt Evaluation (Reading the Prompt)
+This is the "Prefill" phase where the engine reads your 578-token prompt (the System Prompt + the Excel Schema + your question) and converts it into mathematical context (the KV Cache).
+
+| Metric | Pure CPU | Vulkan GPU | Winner |
+|--------|----------|------------|--------|
+| Start Time | 13:05:15.899 | 13:09:22.479 | - |
+| End Time | 13:06:35.486 | 13:10:42.030 | - |
+| Total Time Taken | 79.58 seconds | 79.55 seconds | Exact Tie |
+| Speed | 7.26 tokens/sec | 7.26 tokens/sec | - |
+
+2. Time to First Token
+- CPU Gap: 13:06:35.486 ➡️ 13:06:35.489 (3 milliseconds)
+- GPU Gap: 13:10:42.030 ➡️ 13:11:00.627 (18.6 SECONDS)
+When running on pure CPU, the CPU reads the prompt and instantly starts writing the answer. When the GPU is engaged, the CPU acts as the "manager," reads the prompt, and then has to transfer all that state data over the internal UMA bridge to the GPU buffers. It took the phone nearly 19 seconds just to hand the baton to the GPU before it could even start typing.
+
+3. Code Generation (Decoding)
+This is the phase where the AI actually types out the Python script, one token at a time. Both runs generated approximately 162 tokens (based on the stop token hitting right after Token 160).
+| Metric | Pure CPU | Vulkan GPU | Winner |
+|--------|----------|------------|--------|
+| Start (Token 0) | 13:06:35.489 | 13:11:00.627 | - |
+| End (Stop Token) | 13:07:23.436 | 13:12:01.883 | - |
+| Total Time Taken | 47.94 seconds | 61.25 seconds | CPU (27% Faster) |
+| Generation Speed | ~3.38 tokens/sec | ~2.64 tokens/sec | CPU |
 
 ## last

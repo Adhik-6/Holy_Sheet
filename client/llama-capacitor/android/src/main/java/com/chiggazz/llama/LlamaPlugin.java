@@ -13,6 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import android.util.Log;
 
 @CapacitorPlugin(name = "LlamaCapacitor")
 public class LlamaPlugin extends Plugin {
@@ -26,6 +27,7 @@ public class LlamaPlugin extends Plugin {
     private native long llamaInit(String modelPath, int nThreads, int nCtx, boolean useMmap, int nGpuLayers);
     private native String llamaGenerate(long contextPtr, String prompt, int nPredict, float temperature, String stopToken);
     private native void llamaFree(long contextPtr);
+    private native void llamaStopGeneration();
 
     // Executor for background tasks
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -160,6 +162,7 @@ public class LlamaPlugin extends Plugin {
     public void unload(PluginCall call) {
         executor.execute(() -> {
             if (contextPtr != 0) {
+                llamaStopGeneration(); // Stop math before freeing memory
                 llamaFree(contextPtr);
                 contextPtr = 0;
             }
@@ -167,13 +170,24 @@ public class LlamaPlugin extends Plugin {
         });
     }
 
+    @PluginMethod
+    public void stop(PluginCall call) {
+        Log.i("LlamaPlugin", "🛑 Stop requested from UI.");
+        llamaStopGeneration();
+        call.resolve();
+    }
+
+    // 🔥 Only kill the thread when the app is completely destroyed
     @Override
     protected void handleOnDestroy() {
         super.handleOnDestroy();
+        Log.i("LlamaPlugin", "💥 App is being completely closed! Triggering Kill Switch.");
+        llamaStopGeneration(); // 1. Tell the C++ loop to abort
+        
         if (contextPtr != 0) {
-            llamaFree(contextPtr);
+            llamaFree(contextPtr); // 2. Free the RAM
             contextPtr = 0;
         }
-        executor.shutdown();
+        executor.shutdownNow();    // 3. Kill the Java background threads
     }
 }

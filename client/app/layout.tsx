@@ -5,6 +5,7 @@ import meta from "@/metadata.json";
 import { Inter, JetBrains_Mono } from "next/font/google"; 
 import { MobileGuards } from "./(app)/components/mobileGuards";
 import { CoiLoader } from "@/components/landing/CoiLoader";
+import { Toaster } from "@/components/ui/sonner"; // 🔥 Import Sonner Toaster
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
         {/* <script src="/coi-serviceworker.js" async></script> */}
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-background text-foreground grid-bg antialiased`}>
+        <Toaster />
         {/* Wrap the entire app in your provider here */}
           <CoiLoader />
           <MobileGuards />

@@ -7,6 +7,8 @@ import { LLMProvider } from "@/types/global";
 
 import NativeLlama from './nativeLlama';
 import { isModelLoaded, loadModelForChat } from './modelLoader';
+import { useSettingsStore } from '@/store/settingsStore';
+import { getActiveSLMConfig } from './modelRegistry';
 // import { getModelPath, checkNativeModelExists } from './nativeModelManager';
 
 
@@ -170,7 +172,6 @@ STRICT JSON SCHEMAS (Choose ONE):
 {"type": "chart", "summary": "...", "data": {"config": {"type": "bar|line|pie", "title": "...", "xAxisKey": "X", "series": [{"dataKey": "Y", "label": "..."}]}, "data": [{"X": "a", "Y": 1}]}}
 `;
 
-// --- 2. Gemini IMPLEMENTATION ---
 export async function callGemini(prompt: string): Promise<string> {
   printPrompt(prompt);
   const fullPrompt = `
@@ -190,7 +191,6 @@ ${prompt}
   return response.text();
 }
 
-// --- 2. OPENAI (CHATGPT) IMPLEMENTATION ---
 export async function callOpenAI(prompt: string): Promise<string> {
   printPrompt(prompt);
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -207,7 +207,6 @@ export async function callOpenAI(prompt: string): Promise<string> {
   return completion.choices[0].message.content || "";
 }
 
-// --- 3. GROQ IMPLEMENTATION ---
 export async function callGroq(prompt: string): Promise<string> {
   printPrompt(prompt);
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -228,7 +227,6 @@ export async function callGroq(prompt: string): Promise<string> {
   return completion.choices[0]?.message?.content || "";
 }
 
-// --- 4. CUSTOM ENDPOINT (Your hosted SLM/Colab) ---
 export async function callCustomEndpoint(prompt: string): Promise<string> {
   printPrompt(prompt);
   // Assume your custom API expects { prompt: string } and returns { response: string }
@@ -251,30 +249,24 @@ export async function callLocalSLM(prompt: string): Promise<string> {
     console.warn("⚠️ Model was not loaded. Loading now...");
     await loadModelForChat();
   }
+
+  const settings = useSettingsStore.getState();
   
-  const fullPrompt = `
-<|im_start|>system
-${SLM_SYSTEM_PROMPT}
-<|im_end|>
-<|im_start|>user
-${prompt}
-<|im_end|>
-<|im_start|>assistant
-`;
+  // 🔥 DYNAMIC REGISTRY: Fetch the specific configuration for whatever SLM the user selected
+  const config = getActiveSLMConfig(settings.activeSLM);
+
+  // 🔥 Format the prompt dynamically using the rule defined in modelRegistry.ts
+  const fullPrompt = config.formatPrompt(SLM_SYSTEM_PROMPT, prompt);
 
   printPrompt(fullPrompt, 1);
-  console.log("🚀 Starting NATIVE Engine...");
+  console.log(`🚀 Starting NATIVE Engine for: ${config.name}`);
 
   try {
     const result = await NativeLlama.generate({
       prompt: fullPrompt,
-      nPredict: 256,
-      
-      // 🔥 NEW SAMPLING & STOP PARAMS
-      temperature: 0.1,
-      // top_k: 10,
-      // top_p: 0.1,
-      stop: "<|im_end|>" // Tell the C++ engine to cut the connection here
+      nPredict: 512,
+      temperature: settings.temperature,
+      stop: config.stopToken 
     });
     
     console.log("✅ Native Inference Completed");
