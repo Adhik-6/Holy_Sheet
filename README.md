@@ -1,18 +1,36 @@
-# Holy Sheets
+<div align="center">
+    <img src="./client/assets/icon.png" alt="logo" width=200/>
+  <h1>Holy Sheets</h1>
 
-### Your spreadsheets. Your questions. Your analysis.
+  <h3>Your spreadsheets. Your questions. Your analysis.</h3>
 
-**A privacy-conscious, AI-powered data analyst for Excel and CSV files
---- with browser-based Python execution and an on-device offline mode.**
+  <p>
+    <strong>
+      A privacy-conscious, AI-powered data analyst for Excel and CSV files
+      — with browser-based Python execution and an on-device offline mode.
+    </strong>
+  </p>
 
+  <p>
+    <a href="https://nextjs.org/">
+      <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js 16" />
+    </a>
+    <a href="https://www.typescriptlang.org/">
+      <img src="https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white" alt="TypeScript" />
+    </a>
+    <a href="https://pyodide.org/">
+      <img src="https://img.shields.io/badge/Python-Pyodide-yellow?logo=python&logoColor=white" alt="Python Pyodide" />
+    </a>
+    <a href="https://capacitorjs.com/">
+      <img src="https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white" alt="Capacitor 8" />
+    </a>
+    <a href="https://github.com/ggml-org/llama.cpp">
+      <img src="https://img.shields.io/badge/Local%20AI-llama.cpp-8A2BE2" alt="llama.cpp" />
+    </a>
+  </p>
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Python](https://img.shields.io/badge/Python-Pyodide-yellow?logo=python&logoColor=white)](https://pyodide.org/)
-[![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white)](https://capacitorjs.com/)
-[![llama.cpp](https://img.shields.io/badge/Local%20AI-llama.cpp-8A2BE2)](https://github.com/ggml-org/llama.cpp)
+</div>
 
----
 
 ## 🧬 What is Holy Sheets?
 
@@ -55,12 +73,12 @@ generation**, while Python performs the actual computation.
 <table>
   <tr>
     <td align="center">
-      **KPI Insights**
+      <b>KPI Insights</b>
       <br />
       <img src="./screenshots/kpi_output.jpeg" alt="Holy Sheets KPI output" width="100%" />
     </td>
     <td align="center">
-      **Visual Analysis**
+      <b>Visual Analysis</b>
       <br />
       <img src="./screenshots/bar_output.jpeg" alt="Holy Sheets bar chart output" width="100%" />
     </td>
@@ -292,7 +310,7 @@ permissions are not explicitly granted.
 
 ---
 
-**Built to turn spreadsheet questions into executable analysis.**
+<h4 align="center">Built to turn spreadsheet questions into executable analysis.</h4>
 
 ---
 > P.S: 🙏🏻 This was one hell of a project. It **somehow** worked and I don't know "how?", "why?" and "will it again?". I had little to no idea about SLM, native mobile app development, etc but somehow managed to got this working with the help of AI.
