@@ -1,4 +1,3 @@
-::: {align="center"}
 # Holy Sheets
 
 ### Your spreadsheets. Your questions. Your analysis.
@@ -12,9 +11,8 @@
 [![Python](https://img.shields.io/badge/Python-Pyodide-yellow?logo=python&logoColor=white)](https://pyodide.org/)
 [![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white)](https://capacitorjs.com/)
 [![llama.cpp](https://img.shields.io/badge/Local%20AI-llama.cpp-8A2BE2)](https://github.com/ggml-org/llama.cpp)
-:::
 
-------------------------------------------------------------------------
+---
 
 ## 🧬 What is Holy Sheets?
 
@@ -32,37 +30,42 @@ generation**, while Python performs the actual computation.
 
 ## ✨ Features
 
--   **Ask questions in plain English** --- query spreadsheet data
+- **Ask questions in plain English** --- query spreadsheet data
     without writing formulas or code.
--   **Multiple result formats** --- generate tables, charts, KPIs, and
+- **Multiple result formats** --- generate tables, charts, KPIs, and
     summaries.
--   **Local data processing** --- use Pyodide, pandas, and Python to
+- **Local data processing** --- use Pyodide, pandas, and Python to
     process spreadsheet data in the browser/WebView.
--   **Hybrid AI modes** --- connect to cloud model providers or use a
+- **Hybrid AI modes** --- connect to cloud model providers or use a
     local small language model (SLM) on supported mobile builds.
--   **Offline analysis** --- use on-device inference for supported
+- **Offline analysis** --- use on-device inference for supported
     queries without depending on a cloud model.
--   **Execution-feedback loop** --- when generated code fails, the agent
+- **Execution-feedback loop** --- when generated code fails, the agent
     can use execution errors and the actual dataframe schema to attempt
     a correction.
--   **Follow-up questions** --- continue an analysis using recent
+- **Follow-up questions** --- continue an analysis using recent
     conversation context.
--   **Excel support** --- work with Excel and CSV files, with support
+- **Excel support** --- work with Excel and CSV files, with support
     for generating new Excel files.
--   **Provider flexibility** --- the cloud model layer supports Gemini,
+- **Provider flexibility** --- the cloud model layer supports Gemini,
     OpenAI, Groq, and custom endpoints.
 
 ## 🖼️ Preview
 
-::: {align="center"}
-### KPI insights
-
-<img src="./screenshots/kpi_output.jpeg" alt="Holy Sheets KPI output" width="85%" />
-
-### Visual analysis
-
-<img src="./screenshots/bar_output.jpeg" alt="Holy Sheets bar chart output" width="85%" />
-:::
+<table>
+  <tr>
+    <td align="center">
+      **KPI Insights**
+      <br />
+      <img src="./screenshots/kpi_output.jpeg" alt="Holy Sheets KPI output" width="100%" />
+    </td>
+    <td align="center">
+      **Visual Analysis**
+      <br />
+      <img src="./screenshots/bar_output.jpeg" alt="Holy Sheets bar chart output" width="100%" />
+    </td>
+  </tr>
+</table>
 
 > More application screenshots are available in the
 [screenshots/](./screenshots) folder.
@@ -209,6 +212,7 @@ bridge to the C++ inference engine.
 | 📦 **Package Manager** | pnpm |
 
 ## 🚀 Getting started
+Try at your own risk. This is a research project and not a production-ready.
 
 ### Prerequisites
 
@@ -288,9 +292,7 @@ permissions are not explicitly granted.
 
 ---
 
-::: {align="center"}
 **Built to turn spreadsheet questions into executable analysis.**
-:::
 
 ---
 > P.S: 🙏🏻 This was one hell of a project. It **somehow** worked and I don't know "how?", "why?" and "will it again?". I had little to no idea about SLM, native mobile app development, etc but somehow managed to got this working with the help of AI.
