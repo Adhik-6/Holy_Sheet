@@ -35,18 +35,15 @@ set(GGML_CPU     ON  CACHE BOOL "Enable CPU"       FORCE)
 
 # -------------------------------------------------------
 # 4) CPU optimization
-#    Baseline: armv8-a (safe for all Android devices)
-#    llama.cpp internally compiles dotprod/fp16 hot paths
-#    separately via GGML_CPU_ARM_ARCH + GGML_CPU_REPACK
-#    To enable dotprod, replace the first 2 lines of this block (4) with the next 2 following lines:
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -flto -march=armv8.2-a+dotprod+fp16")
-#    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -O3 -Ofast -flto -march=armv8.2-a+dotprod+fp16")
+#    Using armv8.2-a+dotprod+fp16 for maximum ARM CPU performance.
+#    Note: This restricts the binary to devices with ARMv8.2 (approx. 2018 or newer).
 # -------------------------------------------------------
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -flto -march=armv8-a")
-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -O3 -Ofast -flto -march=armv8-a")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -flto -march=armv8.2-a+dotprod+fp16")
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -O3 -Ofast -flto -march=armv8.2-a+dotprod+fp16")
 
-set(GGML_CPU_ARM_ARCH "armv8-a" CACHE STRING "Base CPU arch for llama.cpp" FORCE)
-set(GGML_CPU_REPACK   ON        CACHE BOOL   "Enable weight repacking"     FORCE)
+# Tell ggml's build system to treat v8.2-a as the baseline
+set(GGML_CPU_ARM_ARCH "armv8.2-a" CACHE STRING "Base CPU arch for llama.cpp" FORCE)
+set(GGML_CPU_REPACK   ON          CACHE BOOL   "Enable weight repacking"     FORCE)
 
 # -------------------------------------------------------
 # 5) Static linking

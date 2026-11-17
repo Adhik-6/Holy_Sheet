@@ -543,7 +543,7 @@ We have opted for a Universal build. We use -march=armv8-a globally in CMake.
   - app-fast (Built with forced dotprod flags).
 3. By uploading both to the Google Play Store via an App Bundle, Google's servers will dynamically deliver the dotprod binary only to modern devices, giving us maximum speed without the crash risk.
 
-### Build/Refresh Options:
+## Build/Refresh Options:
 1. Deleting `.cxx`: The Nuclear Option. CMake heavily caches its C++ build paths to save time. Deleting this folder forces Android Studio to forget everything and rebuild all 470+ llama.cpp files from absolute scratch. Only do this when you change CMakeLists.txt.
 2. `Build > Clean Project`: The Standard Wipe. This deletes your compiled Java/Kotlin files (.class) and old APKs, but it usually leaves the C++ .cxx cache alone. Do this when your Android Java/Capacitor code is acting glitchy.
 3. Sync Project with Gradle Files: The Librarian. This does not compile any code. It simply tells Android Studio to re-read your build.gradle files, download any missing dependencies, and link everything together in the IDE so you don't get red squiggly error lines.
@@ -586,11 +586,12 @@ When running on pure CPU, the CPU reads the prompt and instantly starts writing 
 
 3. Code Generation (Decoding)
 This is the phase where the AI actually types out the Python script, one token at a time. Both runs generated approximately 162 tokens (based on the stop token hitting right after Token 160).
+
 | Metric | Pure CPU | Vulkan GPU | Winner |
-|--------|----------|------------|--------|
-| Start (Token 0) | 13:06:35.489 | 13:11:00.627 | - |
-| End (Stop Token) | 13:07:23.436 | 13:12:01.883 | - |
-| Total Time Taken | 47.94 seconds | 61.25 seconds | CPU (27% Faster) |
-| Generation Speed | ~3.38 tokens/sec | ~2.64 tokens/sec | CPU |
+| :--- | :--- | :--- | :--- |
+| **Start (Token 0)** | 13:06:35.489 | 13:11:00.627 | - |
+| **End (Stop Token)** | 13:07:23.436 | 13:12:01.883 | - |
+| **Total Time Taken** | 47.94 seconds | 61.25 seconds | **CPU (27% Faster)** |
+| **Generation Speed** | ~3.38 tokens/sec | ~2.64 tokens/sec | **CPU** |
 
 ## last
